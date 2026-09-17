@@ -29,11 +29,16 @@ def Nat.mul : Nat -> Nat -> Nat
 instance : Mul Nat where
   mul := Nat.mul
 
-
 def Nat.one : Nat := (Nat.succ Nat.zero)
 def Nat.two : Nat := (Nat.succ Nat.one)
 def Nat.three : Nat := Nat.two.succ
 def Nat.four : Nat := Nat.three.succ
+
+def Nat.Divides ( a b : Nat ) : Prop :=
+  ∃ k : Nat, b = a * k
+
+def Nat.Prime (p : Nat) : Prop :=
+  (p ≠ .one) ∧ ∀ k : Nat, (Divides k p) → (k = .one ∨ k = p)
 
 
 end MyNat
