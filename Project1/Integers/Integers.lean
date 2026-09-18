@@ -67,6 +67,9 @@ instance intRepSetoid : Setoid IntRep where
 def IntRep.add ( x y : IntRep ) : IntRep :=
   IntRep.mk (x.pos + y.pos) (x.neg + y.neg)
 
+def IntRep.mul ( x y : IntRep ) : IntRep :=
+  IntRep.mk ((x.pos * y.pos) + (x.neg * y.neg)) ((x.pos * y.neg) + (x.neg * y.pos))
+
 def IntRep.negate ( x : IntRep ) : IntRep :=
   IntRep.mk x.neg x.pos
 
@@ -79,15 +82,25 @@ def intOfRep ( r : IntRep ) : Int :=
 def intOfNat ( n : Nat ) : Int :=
   intOfRep (IntRep.mk n .zero )
 
+theorem anegneg_is_apos (a : IntRep) :
+  a.negate.neg = a.pos := by rfl
+
+theorem anegpos_is_aneg ( a : IntRep) :
+  a.negate.pos = a.neg := by rfl
+
 theorem negate_respects ( a b : IntRep ) ( h : a.Equivalent b ) :
-  (a.negate.Equivalent b.negate) := by sorry
-
-
-theorem add_respects_right ( a b c : IntRep ) ( h : a.Equivalent b ) :
-  (a.add c).Equivalent (b.add c) := by sorry
-
-theorem add_respects_left ( a b c : IntRep ) ( h : a.Equivalent b ) :
-  (c.add a).Equivalent (c.add b) := by sorry
+  (a.negate.Equivalent b.negate) :=
+  by
+    unfold IntRep.Equivalent
+    unfold IntRep.Equivalent at h
+    rw[anegneg_is_apos]
+    rw[anegneg_is_apos]
+    rw[anegpos_is_aneg]
+    rw[anegpos_is_aneg]
+    rw[add_commutes]
+    apply Eq.symm
+    rw[add_commutes]
+    exact h
 
 def Int.negate : Int -> Int :=
   Quotient.lift
@@ -98,6 +111,62 @@ def Int.negate : Int -> Int :=
       exact negate_respects a b h
     )
 
+theorem unfold_intrep_equiv (a b : IntRep) (h1: a ≈ b) :
+  a.Equivalent b :=
+  by
+    simp only [(· ≈ · )] at h1
+    unfold instHasEquivOfSetoid at h1
+    simp at h1
+    simp[Setoid.r] at h1
+    exact h1
+
+theorem unfold_intrep_equiv_congr (a b : IntRep) (h1: a.Equivalent b) :
+  (a ≈ b) :=
+  by
+    simp only [(· ≈ · )]
+    unfold instHasEquivOfSetoid
+    simp
+    simp[Setoid.r]
+    exact h1
+
+theorem IntRep.equiv_def (a b : IntRep ) :
+  a ≈ b ↔ IntRep.Equivalent a b := by rfl
+
+theorem add_respects (a a' b b' : IntRep ) (ha: a ≈ a') (hb: b ≈ b') :
+  IntRep.add a b ≈ IntRep.add a' b' :=
+  by
+    simp only [(· ≈ · )]
+    unfold instHasEquivOfSetoid
+    simp
+    simp[Setoid.r]
+    unfold IntRep.Equivalent
+    dsimp [IntRep.add]
+
+    have ha2 := unfold_intrep_equiv a a' ha
+    have ha3 := unfold_intrep_equiv b b' hb
+
+    unfold IntRep.Equivalent at ha2
+    unfold IntRep.Equivalent at ha3
+    rw[add_associates]
+    rw (occs := .pos [2]) [add_commutes]
+    rw[<-add_associates]
+    rw[<-add_associates]
+    rw[ha2]
+    rw[add_associates]
+    rw[add_associates]
+    rw[add_associates]
+    apply MyNat.add_left_congr
+    rw (occs := .pos [2]) [<-add_associates]
+    rw (occs := .pos [4]) [add_commutes]
+    rw[add_associates]
+    apply MyNat.add_left_congr
+    rw[add_commutes]
+    exact ha3
+
+theorem mul_respects (a a' b b' : IntRep ) (ha: a ≈ a') (hb: b ≈ b') :
+  IntRep.mul a b ≈ IntRep.mul a' b' := sorry
+
+
 def Int.add : Int -> Int -> Int :=
   Quotient.lift
   ( fun x => Quotient.lift
@@ -105,12 +174,56 @@ def Int.add : Int -> Int -> Int :=
       (by
         intro a b h
         apply Quotient.sound
-        sorry
+        have h0 := equi_refl x
+        rw [<-IntRep.equiv_def] at h0
+        have h2 := add_respects x x a b h0 h
+        exact h2
       )
-  ) (by
-    intro a b h
-    funext y
-    sorry
+  )
+  (
+    by
+      intro a b h
+      funext y
+
+      refine Quotient.inductionOn y ?_
+      intro c
+
+      have h0 := equi_refl c
+      rw [<-IntRep.equiv_def] at h0
+
+
+      apply Quotient.sound
+      have h1 := add_respects a b c c h h0
+      exact h1
+  )
+
+def Int.mul : Int -> Int -> Int :=
+  Quotient.lift
+   ( fun x => Quotient.lift
+      ( fun y => Quotient.mk intRepSetoid (IntRep.mul x y))
+      (by
+        intro a b h
+        apply Quotient.sound
+        have h0 := equi_refl x
+        rw [<-IntRep.equiv_def] at h0
+        have h2 := mul_respects x x a b h0 h
+        exact h2
+      )
+  )
+  (
+    by
+      intro a b h
+      funext y
+
+      refine Quotient.inductionOn y ?_
+      intro c
+
+      have h0 := equi_refl c
+      rw [<-IntRep.equiv_def] at h0
+
+      apply Quotient.sound
+      have h1 := mul_respects a b c c h h0
+      exact h1
   )
 
 instance : Add IntRep where
@@ -119,21 +232,54 @@ instance : Add IntRep where
 instance : Add Int where
   add := Int.add
 
+instance : Mul IntRep where
+  mul := IntRep.mul
+
+instance : Mul Int where
+  mul := Int.mul
+
 def zero_int_rep := IntRep.mk .zero .zero
 
 def zero := intOfRep zero_int_rep
+def one := intOfRep (IntRep.mk .one .zero)
+def two := intOfRep (IntRep.mk .two .zero)
+def three := intOfRep (IntRep.mk .three .zero)
+def four := intOfRep (IntRep.mk .four .zero)
 
 theorem negate_mk ( x : IntRep ) :
   intOfRep (x.negate) = (Int.negate (intOfRep x)):=
-  by sorry
+  by
+    unfold intOfRep
+    apply Quotient.sound
+    unfold IntRep.negate
+    rfl
 
 theorem add_mk ( x y : IntRep ) :
   intOfRep (x + y) = ((intOfRep x) + (intOfRep y)):=
-  by sorry
+  by
+    unfold intOfRep
+    apply Quotient.sound
+    simp only [(· + ·)]
+    unfold IntRep.add
+    unfold Add.add
+    unfold instAddIntRep
+    simp
+    unfold IntRep.add
+    rfl
 
 theorem inteq_means_zero ( x : IntRep ) ( h1 : x.pos = x.neg ) :
-  x = zero_int_rep := by
-  sorry
+  x ≈ zero_int_rep :=
+  by
+    unfold zero_int_rep
+    simp only [(· ≈ ·)]
+    unfold instHasEquivOfSetoid
+    simp
+    simp[Setoid.r]
+    unfold IntRep.Equivalent
+    simp
+    rw[MyNat.add_zero]
+    rw[MyNat.zero_add]
+    exact h1
 
 theorem inverse_nat ( x : Int ) :
   x + (Int.negate x) = zero :=
@@ -150,14 +296,30 @@ theorem inverse_nat ( x : Int ) :
     dsimp [IntRep.negate]
     cases a with
     | mk pos neg =>
-      dsimp [IntRep.add]
       rw[add_commutes]
-      have h1 := inteq_means_zero (IntRep.mk (neg + pos) (neg + pos))
-      dsimp [IntRep.add] at h1
-      have h2 :(neg + pos) = (neg+pos) := by rfl
-      have h3 := h1 h2
-      unfold zero_int_rep at h3
-      rw[h3]
-      rfl
+      unfold intOfRep
+      unfold intOfNat
+      apply Quotient.sound
+      simp only [(· ≈ · )]
+      unfold instHasEquivOfSetoid
+      simp
+      simp[Setoid.r]
+      unfold IntRep.Equivalent
+      simp
+      rw[MyNat.add_zero]
+      rw[MyNat.zero_add]
+
+def Int.Divides ( a b : Int ) : Prop :=
+  ∃ k : Int, b = a * k
+
+def Int.Prime (p : Int) : Prop :=
+  (p ≠ one) ∧ ∀ k : Int, (Divides k p) → (k = one ∨ k = p)
+
+def Int.Even ( n : Int ) : Prop :=
+  Int.Divides two n
+
+def Int.Odd ( n : Int ) : Prop :=
+  ∃ k : Int, n = two * k + one
+
 
 end MyInt
