@@ -1,6 +1,8 @@
 import Project1.Integers.Integers
 import Project1.Nat.Properties
 
+import Std
+
 namespace MyInt
 
 theorem int_add_zero (a : Int) :
@@ -32,6 +34,7 @@ theorem int_mul_associates (a b c : Int ) :
 theorem int_mul_commutes ( a b : Int ) :
   a * b = b * a :=
     sorry
+
 theorem int_add_commutes ( a b : Int ) :
   a + b = b + a :=
   by
@@ -227,7 +230,20 @@ theorem int_two_neq_one : two ≠ one :=
     have bad : False := h3.symm h2
     exact bad
 
-theorem even_square_means_even (a : Int) (h1 : Int.Even (a*a)) : (Int.Even a) := sorry
+theorem not_even_means_odd (a : Int ) (h1 : ¬ Int.Even a) : Int.Odd a :=
+  by
+    sorry
+
+theorem even_means_not_odd (a : Int) (h1 : Int.Even a) : (¬ Int.Odd a ) := sorry
+
+theorem even_square_means_even (a : Int) (h1 : Int.Even (a*a)) : (Int.Even a) :=
+  by
+    apply Classical.byContradiction
+    intro h0
+    have h2 := not_even_means_odd a h0
+    have h3 := odd_squared_is_odd a h2
+    have h4 := even_means_not_odd (a * a) h1
+    contradiction
 
 theorem even_is_mult_of_two (a : Int) (h1 : Int.Even a) : (∃ (k : Int), a = two * k) :=
   by
@@ -240,7 +256,10 @@ theorem common_div_divides_gcd ( a b d : Int )
   (h2 : d.Divides b) :
   (d.Divides (Int.gcd a b)) := sorry
 
-theorem even_means_two_divides (a : Int ) (h1 : Int.Even a) : two.Divides a := sorry
+theorem even_means_two_divides (a : Int ) (h1 : Int.Even a) : two.Divides a :=
+  by
+    unfold Int.Even at h1
+    exact h1
 
 theorem root2_irrational_1 :
   (¬ ∃ (a b : Int), (Int.gcd a b = one) ∧ two * b * b = a * a) :=

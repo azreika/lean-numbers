@@ -321,6 +321,15 @@ theorem lte_one_adds (a b : Nat ) (h1 : Nat.lte a b ) :
       change a.succ.lte b
       exact h1
 
+theorem lte_one_minus (a b : Nat ) (h1 : Nat.lte (a + .one) (b+.one) ) :
+  (Nat.lte a b) :=
+  by
+    rw[<-succ_add_one] at h1
+    rw[<-succ_add_one] at h1
+    change a.succ.lte b.succ
+    change a.lte b
+    exact h1
+
 theorem lte_add_term ( a b c : Nat ) (h1 : Nat.lte a b ) :
   Nat.lte (a + c) (b + c) := by
     induction c with
@@ -336,6 +345,21 @@ theorem lte_add_term ( a b c : Nat ) (h1 : Nat.lte a b ) :
       rw[<-add_associates]
       have h2 : (Nat.lte ((a + c) + .one) ((b + c) + .one)) := lte_one_adds (a+c) (b+c) ih
       exact h2
+
+theorem lte_cancel_right ( a b c : Nat ) (h1 : Nat.lte (a + c) (b +c) ) :
+    Nat.lte a b := by
+    induction c generalizing a b with
+    | zero =>
+      rw[add_zero] at h1
+      rw[add_zero] at h1
+      exact h1
+    | succ c ih =>
+      rw[succ_add_one] at h1
+      rw[<-add_associates] at h1
+      rw[<-add_associates] at h1
+      have h2 := lte_one_minus (a + c) (b+c) h1
+      have h3 := ih a b h2
+      exact h3
 
 theorem lt_means_neq ( a b : Nat ) ( h1: Nat.lt a b ) :
   (a ≠ b) :=
@@ -538,6 +562,25 @@ theorem div_cancels_left ( a b c : Nat ) (h1 : c ≠ .zero ) (h2 : c * a = c * b
     rw (occs := .pos [2])  [mul_commutes] at h2
     have h3 := div_cancels a b c h1 h2
     exact h3
+
+theorem mul_left ( a b c : Nat ) (h2 : a = b) :
+  c * a = c * b :=
+  by
+    induction c generalizing a b with
+    | zero =>
+      rw[zero_mul]
+      rw[zero_mul]
+    | succ c ih =>
+      rw[mul_commutes]
+      rw (occs := .pos [2]) [mul_commutes]
+      change a * c.succ = b * c.succ
+      change a + (a * c) = b + (b * c)
+      have h3 := ih a b h2
+      rw[mul_commutes]
+      rw (occs := .pos [2]) [mul_commutes]
+      rw[h3]
+      apply add_right_congr
+      exact h2
 
 theorem two_squared : (Nat.two * Nat.two = Nat.four) :=
   by

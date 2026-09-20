@@ -1,5 +1,6 @@
 import Project1.Nat.Nat
 import Project1.Nat.Arithmetic
+import Project1.Nat.Properties
 
 namespace MyInt
 
@@ -163,9 +164,131 @@ theorem add_respects (a a' b b' : IntRep ) (ha: a ≈ a') (hb: b ≈ b') :
     rw[add_commutes]
     exact ha3
 
-theorem mul_respects (a a' b b' : IntRep ) (ha: a ≈ a') (hb: b ≈ b') :
-  IntRep.mul a b ≈ IntRep.mul a' b' := sorry
+instance : Add IntRep where
+  add := IntRep.add
 
+instance : Mul IntRep where
+  mul := IntRep.mul
+
+theorem intrep_mul_commutes (a b : IntRep ) :
+  (a * b = b * a) :=
+  by
+    simp [(· * · )]
+    dsimp [Mul.mul]
+    dsimp [IntRep.mul]
+    simp
+
+    constructor
+    rw[MyNat.mul_commutes]
+    apply MyNat.add_left_congr
+    rw[MyNat.mul_commutes]
+
+    rw[MyNat.mul_commutes]
+    rw (occs := .pos [2]) [add_commutes]
+    apply MyNat.add_left_congr
+    rw[MyNat.mul_commutes]
+
+theorem add_combines (xpos ypos xneg yneg : Nat) :
+  (IntRep.mk (xpos + ypos) (xneg + yneg)) = ((IntRep.mk xpos xneg) + (IntRep.mk ypos yneg)) :=
+  by
+    rfl
+
+theorem posneg_preserves_lt ( a b : IntRep ) (h1 : a ≈ b ) (h2: (MyNat.Nat.lte a.neg a.pos) ) :
+  (MyNat.Nat.lte b.neg b.pos) :=
+  by
+    have h3 := unfold_intrep_equiv a b h1
+    unfold IntRep.Equivalent at h3
+    cases a with
+    | mk posa nega =>
+      simp at h2
+      simp at h3
+      cases b with
+      | mk posb negb =>
+        simp at h3
+        simp
+        rw[add_commutes] at h3
+        have h4 : (MyNat.Nat.lte (negb + nega) (negb + posa)) := by
+          rw[add_commutes]
+          rw (occs := .pos [2]) [add_commutes]
+          apply MyNat.lte_add_term
+          exact h2
+        rw[h3] at h4
+        have h5 : (MyNat.Nat.lte negb posb) := MyNat.lte_cancel_right negb posb nega h4
+        exact h5
+
+theorem mul_extracts (a xpos xneg : Nat) :
+  (IntRep.mk (a * xpos) (a*xneg)) = ((IntRep.mk a .zero) * (IntRep.mk xpos xneg)) :=
+  by
+    simp only [(· * · )]
+    dsimp [Mul.mul]
+    unfold IntRep.mul
+    simp
+    rw[MyNat.zero_mul]
+    rw[MyNat.zero_mul]
+    rw[MyNat.add_zero]
+    rw[MyNat.add_zero]
+    constructor
+    rfl
+    rfl
+
+theorem mul_respects_left (a a' b : IntRep) (h1: a ≈ a') :
+  a * b ≈ a' * b :=
+  by
+    apply unfold_intrep_equiv_congr
+    unfold IntRep.Equivalent
+    simp [(· * ·)]
+    unfold Mul.mul
+    unfold instMulIntRep
+    simp
+    dsimp [IntRep.mul]
+    have h3 := unfold_intrep_equiv a a' h1
+    dsimp [IntRep.Equivalent] at h3
+    have h4 := MyNat.mul_left (a.pos + a'.neg) (a'.pos + a.neg) b.pos h3
+    rw[MyNat.mul_add_distributes] at h4
+    rw[MyNat.mul_add_distributes] at h4
+    rw[MyNat.mul_commutes] at h4
+    rw (occs := .pos [3] ) [add_commutes]
+    rw (occs := .pos [3] ) [MyNat.mul_commutes]
+    rw[add_associates]
+    rw (occs := .pos [2] ) [add_commutes]
+    rw[<-add_associates]
+    rw[<-add_associates]
+    rw[h4]
+    rw[MyNat.mul_commutes]
+    rw[add_associates]
+    rw[add_associates]
+    rw[add_associates]
+    apply MyNat.add_left_congr
+    rw[MyNat.mul_commutes]
+    rw (occs := .pos [2]) [<-add_associates]
+    rw (occs := .pos [3]) [add_commutes]
+    apply MyNat.add_left_congr
+    have h5 := (MyNat.mul_left (a.pos + a'.neg) (a'.pos + a.neg) b.neg h3).symm
+    rw[MyNat.mul_add_distributes] at h5
+    rw[MyNat.mul_add_distributes] at h5
+    rw[MyNat.mul_commutes] at h5
+    rw (occs := .pos [2]) [MyNat.mul_commutes]
+    rw[h5]
+    rw[MyNat.mul_commutes]
+    rw[add_commutes]
+    apply MyNat.add_right_congr
+    rw[MyNat.mul_commutes]
+
+theorem mul_respects_right (a a' b : IntRep) (h1: a ≈ a') :
+  b * a ≈ b * a' :=
+  by
+    rw[intrep_mul_commutes]
+    rw (occs := .pos [2]) [intrep_mul_commutes]
+    have h2 := mul_respects_left a a' b h1
+    exact h2
+
+theorem mul_respects (a a' b b' : IntRep ) (ha: a ≈ a') (hb: b ≈ b') :
+  IntRep.mul a b ≈ IntRep.mul a' b' :=
+  by
+    have h1 : a.mul b ≈ a'.mul b := mul_respects_left a a' b ha
+    have h2 : a'.mul b ≈ a'.mul b' := mul_respects_right b b' a' hb
+    have h3 := equi_trans (a.mul b) (a'.mul b) (a'.mul b') h1 h2
+    exact h3
 
 def Int.add : Int -> Int -> Int :=
   Quotient.lift
@@ -226,18 +349,6 @@ def Int.mul : Int -> Int -> Int :=
       exact h1
   )
 
-instance : Add IntRep where
-  add := IntRep.add
-
-instance : Add Int where
-  add := Int.add
-
-instance : Mul IntRep where
-  mul := IntRep.mul
-
-instance : Mul Int where
-  mul := Int.mul
-
 def zero_int_rep := IntRep.mk .zero .zero
 
 def zero := intOfRep zero_int_rep
@@ -254,6 +365,11 @@ theorem negate_mk ( x : IntRep ) :
     unfold IntRep.negate
     rfl
 
+instance : Add Int where
+  add := Int.add
+
+instance : Mul Int where
+  mul := Int.mul
 theorem add_mk ( x y : IntRep ) :
   intOfRep (x + y) = ((intOfRep x) + (intOfRep y)):=
   by
