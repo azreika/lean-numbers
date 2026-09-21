@@ -435,6 +435,7 @@ theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
     exact hh
     | inr hh =>
     right
+
     have h2 := unfold_intrep_equiv (a*b) .zero h1
 
     unfold IntRep.Equivalent at h2
@@ -459,10 +460,7 @@ theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
 
     induction bpos generalizing apos aneg bneg with
     | zero =>
-    rw[MyNat.mul_zero] at h2
-    rw[MyNat.mul_zero] at h2
-    rw[MyNat.zero_add] at h2
-    rw[MyNat.add_zero] at h2
+    rw[MyNat.mul_zero, MyNat.mul_zero, MyNat.zero_add, MyNat.add_zero] at h2
     apply dn
     intro h0
 
@@ -473,26 +471,20 @@ theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
     have h3 : (aneg = apos) := MyNat.div_cancels aneg apos bneg h0' h2
     have h4 := inteq_means_zero (IntRep.mk apos aneg)
     simp at h4
-    have h5 := h4 h3.symm
-    have h6 := And.intro h5 hh
+    symm at h3
+    rw[h4] at h3
     contradiction
+
     | succ bpos ih =>
+    have htan := ih apos aneg hh
     cases bpos with
       | zero =>
-      rw[<-MyNat.Nat.one] at h2
-      rw[MyNat.mul_one] at h2
-      rw[MyNat.mul_one] at h2
-      rw[mul_expands] at h1
-      dsimp [IntRep.mul] at h1
-      rw[<-MyNat.Nat.one] at h1
-      rw[MyNat.mul_one] at h1
-      rw[MyNat.mul_one] at h1
+      rw[<-MyNat.Nat.one, MyNat.mul_one, MyNat.mul_one] at h2
       cases bneg with
-        | zero =>
-        contradiction
+        | zero => contradiction
         | succ bneg =>
         rw[MyNat.succ_same]
-        have h3 := ih apos aneg hh bneg
+        have h3 := htan bneg
         rw[mul_expands] at h3
         dsimp[IntRep.mul] at h3
         rw[MyNat.mul_zero] at h3
@@ -500,12 +492,8 @@ theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
         rw[MyNat.mul_zero] at h3
         rw[MyNat.add_zero] at h3
 
-        rw[MyNat.add_one] at h2
-        rw[MyNat.mul_add_distributes] at h2
-        rw[MyNat.mul_one] at h2
-        rw[MyNat.mul_add_distributes] at h2
-        rw[MyNat.mul_one] at h2
-        rw[MyNat.add_associates] at h2
+        rw[MyNat.add_one, MyNat.mul_add_distributes, MyNat.mul_one, MyNat.mul_add_distributes] at h2
+        rw[MyNat.mul_one, MyNat.add_associates] at h2
         have h2 := MyNat.add_left_cancel (aneg + aneg * bneg) (apos * bneg + aneg) apos h2
 
         simp only [(· ≈ ·)] at h3
@@ -529,31 +517,29 @@ theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
       have h3 : (apos = aneg) := MyNat.div_cancels apos aneg (bpos.succ.succ) h0 h2
       have h4 := inteq_means_zero (IntRep.mk apos aneg)
       simp at h4
-      have h5 := h4 h3
-      have h6 := And.intro h5 hh
+      rw[h4] at h3
       contradiction
       | succ bneg =>
       rw[MyNat.succ_same]
-      have h3 := ih apos aneg hh bneg
+      have h3 := htan bneg
       rw[mul_expands] at h3
       dsimp[IntRep.mul] at h3
-      rw[MyNat.add_one] at h2
-      rw[MyNat.mul_add_distributes] at h2
-      rw[MyNat.mul_one] at h2
-      rw[MyNat.mul_add_distributes] at h2
-      rw[MyNat.mul_one] at h2
-      rw[MyNat.add_associates] at h2
-      rw[MyNat.add_one] at h2
-      rw[MyNat.add_one] at h2
-      rw[MyNat.mul_add_distributes] at h2
-      rw[MyNat.mul_add_distributes] at h2
-      rw[MyNat.mul_add_distributes] at h2
-      rw[MyNat.mul_add_distributes] at h2
 
+      rw[MyNat.add_one] at h2
+      rw[MyNat.mul_add_distributes, MyNat.mul_one] at h2
+      rw[MyNat.mul_add_distributes, MyNat.mul_one] at h2
+      rw[MyNat.add_associates] at h2
+      rw[MyNat.add_one] at h2
+      rw[MyNat.add_one] at h2
+      rw[MyNat.mul_add_distributes, MyNat.mul_one] at h2
+      rw[MyNat.mul_add_distributes, MyNat.mul_one] at h2
+      rw[MyNat.mul_add_distributes] at h2
+      rw[MyNat.mul_add_distributes] at h2
       rw[MyNat.mul_one] at h2
       rw[MyNat.mul_one] at h2
       rw[MyNat.add_associates] at h2
       rw[MyNat.add_associates] at h2
+
       have h2 := MyNat.add_left_cancel (apos + (apos * bpos + (aneg + aneg * bneg))) (apos * bneg + (aneg + (aneg + aneg * bpos))) apos h2
 
       simp only [(· ≈ ·)] at h3

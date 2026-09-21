@@ -408,8 +408,8 @@ theorem mul_mk ( x y : IntRep ) :
 theorem mul_expands ( x y : IntRep) :
   x * y = x.mul y := rfl
 
-theorem inteq_means_zero ( x : IntRep ) ( h1 : x.pos = x.neg ) :
-  x ≈ zero_int_rep :=
+theorem inteq_means_zero ( x : IntRep ) :
+  (x.pos = x.neg) ↔ x ≈ zero_int_rep :=
   by
     unfold zero_int_rep
     simp only [(· ≈ ·)]
@@ -420,7 +420,6 @@ theorem inteq_means_zero ( x : IntRep ) ( h1 : x.pos = x.neg ) :
     simp
     rw[MyNat.add_zero]
     rw[MyNat.zero_add]
-    exact h1
 
 theorem inverse_nat ( x : Int ) :
   x + (Int.negate x) = .zero :=
