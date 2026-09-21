@@ -378,9 +378,23 @@ theorem prime_divisible_sum
 
 theorem mul_left_congr ( a b c : Int ) ( h1 : a = b ) : (c * a = c * b) := by rw[h1]
 
-theorem mul_left_divides( a b c : Int ) ( h1 : c * a = c * b ) :
+theorem additive_inverse ( a : Int) : (a + a.negate = .zero) := sorry
+
+theorem neg_expands_mul ( a b : Int ) : (a * b).negate = a * (b.negate) := sorry
+
+theorem mul_to_zero ( a b : Int ) (h1 : a * b = .zero) :
+  (a = .zero ∨ b = .zero) := sorry
+
+theorem mul_left_divides( a b c : Int ) ( h1 : c * a = c * b ) (hc : c ≠ .zero) :
   (a = b) :=
   by
+    have h2 := add_left_congr (c*a) (c*b) (c * b).negate h1
+    rw[int_add_commutes] at h2
+    rw (occs := .pos [2]) [int_add_commutes] at h2
+    rw[additive_inverse] at h2
+    rw[neg_expands_mul] at h2
+    rw[<-mul_add_distributes] at h2
+    have h3 : (c = .zero ∨ (a + b.negate = .zero)) := mul_to_zero c (a + b.negate) h2
     sorry
 
 theorem intofnat_mul (a b : Nat) :
@@ -555,6 +569,45 @@ theorem even_means_two_divides (a : Int ) (h1 : Int.Even a) : Int.two.Divides a 
     unfold Int.Even at h1
     exact h1
 
+theorem intofrep_eq ( a b : IntRep ) (h1 : intOfRep a = intOfRep b) :
+  (a.pos + b.neg = a.neg + b.pos) :=
+  by
+    cases a with
+    | mk apos aneg =>
+      cases b with
+      | mk bpos bneg =>
+        simp
+        sorry
+
+theorem intrep_onlypos (a b : IntRep) (heq : a = b) (ha: a.neg = .zero) (hb: b.neg = .zero) :
+  (a.pos = b.pos) := sorry
+
+theorem intofnat_eq (a b : Nat) (h1 : intOfNat a = intOfNat b) :
+  (a = b) :=
+  by
+    induction a generalizing b with
+    | zero =>
+        dsimp [intOfNat] at h1
+        have h2 := intofrep_eq (IntRep.mk .zero .zero) (IntRep.mk b .zero) h1
+        simp at h2
+        rw[MyNat.zero_add] at h2
+        rw[MyNat.zero_add] at h2
+        exact h2
+    | succ a ih =>
+        dsimp [intOfNat] at h1
+        have h2 := intofrep_eq (IntRep.mk a.succ .zero) (IntRep.mk b .zero) h1
+        simp at h2
+        rw[MyNat.zero_add] at h2
+        rw[MyNat.add_zero] at h2
+        exact h2
+
+theorem two_neq_zero : (Int.two ≠ .zero) :=
+  by
+    intro h1
+    dsimp [Int.two, Int.zero] at h1
+    have h2 := intofnat_eq MyNat.Nat.two MyNat.Nat.zero h1
+    contradiction
+
 theorem root2_irrational_1 :
   (¬ ∃ (a b : Int), (Int.gcd a b = Int.one) ∧ .two * b * b = a * a) :=
   by
@@ -594,6 +647,8 @@ theorem root2_irrational_1 :
     have h8 : (Int.Even (b * b)) := by
       unfold Int.Even
       exists (k * k)
+      have h9 := h7 two_neq_zero
+      rw[h9]
 
     have hbeven := even_square_means_even b h8
 

@@ -84,6 +84,9 @@ def intOfRep ( r : IntRep ) : Int :=
 def intOfNat ( n : Nat ) : Int :=
   intOfRep (IntRep.mk n .zero )
 
+def Int.lte (a b : Int) : Prop := sorry
+def Int.lt (a b : Int) : Prop := (Int.lte a b) ∧ (a ≠ b)
+
 theorem anegneg_is_apos (a : IntRep) :
   a.negate.neg = a.pos := by rfl
 
@@ -445,6 +448,8 @@ theorem inverse_nat ( x : Int ) :
       simp
       rw[MyNat.add_zero]
       rw[MyNat.zero_add]
+
+def Int.Positive (a : Int) : Prop := Int.lt a Int.zero
 
 def Int.Divides ( a b : Int ) : Prop :=
   ∃ k : Int, b = a * k
