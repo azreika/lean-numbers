@@ -443,12 +443,16 @@ theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
     rw[MyNat.add_zero] at h2
     rw[intrep_zero_pos] at h2
     rw[MyNat.zero_add] at h2
+
+
     apply unfold_intrep_equiv_congr
     dsimp [IntRep.Equivalent]
     rw[intrep_zero_neg]
     rw[MyNat.add_zero]
     rw[intrep_zero_pos]
     rw[MyNat.zero_add]
+
+
 
     cases a with
     | mk apos aneg =>
@@ -470,7 +474,6 @@ theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
       exact h0
     have h3 : (aneg = apos) := MyNat.div_cancels aneg apos bneg h0' h2
     have h4 := inteq_means_zero (IntRep.mk apos aneg)
-    simp at h4
     symm at h3
     rw[h4] at h3
     contradiction
@@ -516,7 +519,6 @@ theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
       have h0 : (bpos.succ.succ ≠ .zero) := MyNat.succed_is_nonzero bpos.succ
       have h3 : (apos = aneg) := MyNat.div_cancels apos aneg (bpos.succ.succ) h0 h2
       have h4 := inteq_means_zero (IntRep.mk apos aneg)
-      simp at h4
       rw[h4] at h3
       contradiction
       | succ bneg =>
@@ -570,18 +572,9 @@ theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
       rw[<-MyNat.succ_add_one] at h4
       exact h4
 
-
 theorem mul_to_zero ( a b : Int ) (h1 : a * b = .zero) :
   (a = .zero ∨ b = .zero) :=
   by
-    have h2 : (a = .zero ∨ a ≠ .zero) := zero_or_nonzero a
-    cases h2 with
-    | inl hn =>
-    left
-    exact hn
-    | inr hn =>
-    right
-
     sorry
 
 theorem mul_left_divides( a b c : Int ) ( h1 : c * a = c * b ) (hc : c ≠ .zero) :

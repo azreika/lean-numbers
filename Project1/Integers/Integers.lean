@@ -353,8 +353,8 @@ def Int.mul : Int -> Int -> Int :=
       exact h1
   )
 
-def zero_int_rep := IntRep.mk .zero .zero
 def IntRep.zero := IntRep.mk .zero .zero
+def zero_int_rep := IntRep.zero
 
 def Int.zero := intOfNat .zero
 def Int.one := intOfNat .one
@@ -412,12 +412,12 @@ theorem inteq_means_zero ( x : IntRep ) :
   (x.pos = x.neg) ↔ x ≈ zero_int_rep :=
   by
     unfold zero_int_rep
+    unfold IntRep.zero
     simp only [(· ≈ ·)]
     unfold instHasEquivOfSetoid
     simp
     simp[Setoid.r]
     unfold IntRep.Equivalent
-    simp
     rw[MyNat.add_zero]
     rw[MyNat.zero_add]
 
