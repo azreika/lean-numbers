@@ -7,6 +7,7 @@ namespace MyInt
 abbrev Nat := MyNat.Nat
 abbrev add_commutes := MyNat.add_commutes
 abbrev add_associates := MyNat.add_associates
+abbrev mul_commutes := MyNat.mul_commutes
 
 -- want to represent as an equivalence class
 -- represents pos - neg
@@ -351,11 +352,14 @@ def Int.mul : Int -> Int -> Int :=
 
 def zero_int_rep := IntRep.mk .zero .zero
 
-def zero := intOfRep zero_int_rep
-def one := intOfRep (IntRep.mk .one .zero)
-def two := intOfRep (IntRep.mk .two .zero)
-def three := intOfRep (IntRep.mk .three .zero)
-def four := intOfRep (IntRep.mk .four .zero)
+def Int.zero := intOfNat .zero
+def Int.one := intOfNat .one
+def Int.two := intOfNat .two
+def Int.three := intOfNat .three
+def Int.four := intOfNat .four
+
+theorem intof_nat_to_rep (x : Nat) :
+  (intOfNat x) = (intOfRep (IntRep.mk x .zero)) := rfl
 
 theorem negate_mk ( x : IntRep ) :
   intOfRep (x.negate) = (Int.negate (intOfRep x)):=
@@ -370,6 +374,7 @@ instance : Add Int where
 
 instance : Mul Int where
   mul := Int.mul
+
 theorem add_mk ( x y : IntRep ) :
   intOfRep (x + y) = ((intOfRep x) + (intOfRep y)):=
   by
@@ -381,6 +386,19 @@ theorem add_mk ( x y : IntRep ) :
     unfold instAddIntRep
     simp
     unfold IntRep.add
+    rfl
+
+theorem mul_mk ( x y : IntRep ) :
+  intOfRep (x * y) = ((intOfRep x) * (intOfRep y)):=
+  by
+    unfold intOfRep
+    apply Quotient.sound
+    simp only [(· * ·)]
+    unfold IntRep.mul
+    unfold Mul.mul
+    unfold instMulIntRep
+    simp
+    unfold IntRep.mul
     rfl
 
 theorem inteq_means_zero ( x : IntRep ) ( h1 : x.pos = x.neg ) :
@@ -398,7 +416,7 @@ theorem inteq_means_zero ( x : IntRep ) ( h1 : x.pos = x.neg ) :
     exact h1
 
 theorem inverse_nat ( x : Int ) :
-  x + (Int.negate x) = zero :=
+  x + (Int.negate x) = .zero :=
   by
     refine Quotient.inductionOn x ?_
     intro a

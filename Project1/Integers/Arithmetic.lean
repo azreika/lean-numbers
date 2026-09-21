@@ -5,15 +5,44 @@ import Std
 
 namespace MyInt
 
+abbrev mul_associates := MyNat.mul_associates
+
+theorem int_rep_add_associates ( a b c : IntRep ) :
+  (a + b) + c = a + (b + c ) := by
+    cases a with
+    | mk apos aneg =>
+      cases b with
+      | mk bpos bneg =>
+        cases c with
+        | mk cpos cneg =>
+          change (IntRep.mk (apos + bpos + cpos) (aneg + bneg + cneg)) =
+                  (IntRep.mk (apos + (bpos + cpos)) (aneg + (bneg + cneg)))
+          rw[MyNat.add_associates]
+          rw[MyNat.add_associates]
+
+theorem int_add_associates (a b c : Int ) :
+  (a + b) + c = a + (b + c ) :=
+  by
+    refine Quotient.inductionOn₃ a b c ?_
+    intro x y z
+    rw[<-intOfRep]
+    rw[<-intOfRep]
+    rw[<-intOfRep]
+    rw[<-add_mk]
+    rw[<-add_mk]
+    rw[<-add_mk]
+    rw[<-add_mk]
+    rw[int_rep_add_associates]
+
 theorem int_add_zero (a : Int) :
-  a + zero = a :=
+  a + .zero = a :=
   by
     refine Quotient.inductionOn a ?_
     intro x
     rw[<-intOfRep]
-    unfold zero
+    unfold Int.zero
+    rw[intof_nat_to_rep]
     rw[<-add_mk]
-    unfold zero_int_rep
     cases x with
     | mk pos neg =>
       dsimp[Int]
@@ -24,16 +53,103 @@ theorem int_add_zero (a : Int) :
       rw[MyNat.add_zero]
       exact equi_refl (IntRep.mk pos neg)
 
-theorem int_add_associates (a b c : Int ) :
-  (a + b) + c = a + (b + c ) := sorry
+theorem add_left_congr ( a b c : Int ) ( h1 : a = b ) :
+  (c + a = c + b) :=
+  by
+    rw[h1]
+
+theorem add_right_congr ( a b c : Int ) ( h1 : a = b ) :
+(a + c = b + c) :=
+  by
+    rw[h1]
+
+theorem intrep_mul_associates (a b c : IntRep ) :
+  (a * b) * c = a * (b * c) :=
+  by
+    cases a with
+    | mk apos aneg =>
+      cases b with
+      | mk bpos bneg =>
+        cases c with
+        | mk cpos cneg =>
+          simp only [(· * ·)]
+          unfold Mul.mul
+          unfold instMulIntRep
+          simp
+          dsimp [IntRep.mul]
+          simp
+
+          rw[mul_commutes]
+          rw[MyNat.mul_add_distributes]
+          rw[MyNat.mul_add_distributes]
+          rw[mul_commutes]
+          rw[mul_associates]
+          rw[add_associates]
+          rw[add_associates]
+
+          constructor
+
+          apply MyNat.add_left_congr
+          rw[MyNat.mul_add_distributes]
+          rw[<-add_associates]
+          rw (occs := .pos [3]) [add_commutes]
+          rw[mul_commutes]
+          rw[mul_associates]
+          apply MyNat.add_left_congr
+          rw[mul_commutes]
+          rw[MyNat.mul_add_distributes]
+          rw[mul_commutes]
+          rw[mul_associates]
+          apply MyNat.add_left_congr
+          rw[mul_commutes]
+          rw[mul_associates]
+
+          rw[mul_commutes]
+          rw[MyNat.mul_add_distributes]
+          rw[MyNat.mul_add_distributes]
+          rw[mul_commutes]
+          rw[mul_associates]
+          rw[add_associates]
+          rw[add_associates]
+          apply MyNat.add_left_congr
+          rw[MyNat.mul_add_distributes]
+          rw[<-add_associates]
+          rw (occs := .pos [3]) [add_commutes]
+          rw[mul_commutes]
+          rw[mul_associates]
+          apply MyNat.add_left_congr
+          rw[mul_commutes]
+          rw[MyNat.mul_add_distributes]
+          rw[mul_commutes]
+          rw[mul_associates]
+          apply MyNat.add_left_congr
+          rw[mul_commutes]
+          rw[mul_associates]
 
 theorem int_mul_associates (a b c : Int ) :
-  (a * b) * c = a * (b * c ) := sorry
-
+  (a * b) * c = a * (b * c ) :=
+  by
+    refine Quotient.inductionOn₃ a b c ?_
+    intro x y z
+    rw[<-intOfRep]
+    rw[<-intOfRep]
+    rw[<-intOfRep]
+    rw[<-mul_mk]
+    rw[<-mul_mk]
+    rw[<-mul_mk]
+    rw[<-mul_mk]
+    rw[intrep_mul_associates]
 
 theorem int_mul_commutes ( a b : Int ) :
   a * b = b * a :=
-    sorry
+  by
+    refine Quotient.inductionOn₂ a b ?_
+    intro x y
+    rw[<-intOfRep]
+    rw[<-intOfRep]
+    rw[<-mul_mk]
+    rw[<-mul_mk]
+    rw[intrep_mul_commutes]
 
 theorem int_add_commutes ( a b : Int ) :
   a + b = b + a :=
@@ -61,14 +177,10 @@ theorem int_add_commutes ( a b : Int ) :
         exact equi_refl (IntRep.mk (ypos + xpos) (yneg+xneg) )
 
 theorem int_zero_add ( a : Int ) :
-  zero + a = a :=
+  .zero + a = a :=
   by
     rw[int_add_commutes]
     rw[int_add_zero]
-
-theorem add_left_cancel (a b c : Int ) (h1 : a = b) :
-  (a + c = b + c) :=
-  by sorry
 
 theorem left_divides ( p m : Int ) :
   (p.Divides (p*m)) :=
@@ -112,7 +224,7 @@ theorem prime_divisible_sum
     obtain ⟨ m , hm ⟩ := h3
 
     rw[hk] at hm
-    have h2 := add_left_cancel (p*k + b) (p*m) (p*k).negate hm
+    have h2 := add_right_congr (p*k + b) (p*m) (p*k).negate hm
     rw[int_add_commutes] at h2
     rw[<-int_add_associates] at h2
     rw[int_add_commutes] at h2
@@ -127,7 +239,6 @@ theorem prime_divisible_sum
     rw[<-h2] at h6
     exact h6
 
-
 theorem even_squared_is_even (n : Int) (h1: Int.Even n) : (Int.Even (n * n)) :=
   by
     unfold Int.Even
@@ -137,40 +248,148 @@ theorem even_squared_is_even (n : Int) (h1: Int.Even n) : (Int.Even (n * n)) :=
     rw[hk]
     rw[int_mul_associates]
     unfold Int.Divides
-    exists (k * (two * k))
+    exists (k * (.two * k))
 
+theorem intrep_mul_def (a b : IntRep ) :
+  a * b = (IntRep.mk (a.pos * b.pos + a.neg * b.neg) (a.pos * b.neg + a.neg * b.pos)) :=
+  by rfl
+
+theorem pos_expands (a b : IntRep) :
+  (a + b).pos = a.pos + b.pos := sorry
+
+theorem neg_expands (a b : IntRep) :
+  (a + b).neg = a.neg + b.neg := sorry
+
+theorem intrep_mul_add_distributes ( a b c : IntRep) :
+  a * (b + c) = a * b + a * c :=
+  by
+    cases a with
+    | mk apos aneg =>
+      rw[intrep_mul_def]
+      rw[add_combines]
+      simp
+      rw[pos_expands]
+      rw[neg_expands]
+      rw[MyNat.mul_add_distributes]
+      rw[MyNat.mul_add_distributes]
+      rw[MyNat.mul_add_distributes]
+      rw[MyNat.mul_add_distributes]
+      cases b with
+      | mk bpos bneg =>
+        rw[intrep_mul_def]
+        rw[add_combines]
+        simp
+        cases c with
+        | mk cpos cneg =>
+          rw[intrep_mul_def]
+          rw[add_combines]
+          simp
+          sorry
 
 theorem mul_add_distributes ( a b c : Int ) :
   a * (b + c) = a * b + a * c :=
   by
-    sorry
+    refine Quotient.inductionOn₃ a b c ?_
+    intro a b c
+    rw[<-intOfRep]
+    rw[<-intOfRep]
+    rw[<-intOfRep]
+    rw[<-mul_mk]
+    rw[<-mul_mk]
+    rw[<-add_mk]
+    rw[<-add_mk]
+    rw[<-mul_mk]
+    rw[intrep_mul_add_distributes]
 
-theorem add_left_congr ( a b c : Int ) ( h1 : a = b ) :
-  (c + a = c + b) :=
-  by
-    sorry
-theorem add_right_congr ( a b c : Int ) ( h1 : a = b ) :
-(a + c = b + c) :=
-  by
-    sorry
-
-theorem mul_left_congr ( a b c : Int ) ( h1 : a = b ) :
-(c * a = c * b) :=
-  by
-    sorry
+theorem mul_left_congr ( a b c : Int ) ( h1 : a = b ) : (c * a = c * b) := by rw[h1]
 
 theorem mul_left_divides( a b c : Int ) ( h1 : c * a = c * b ) :
-(a = b) :=
+  (a = b) :=
   by
     sorry
 
+theorem intofnat_mul (a b : Nat) :
+  (intOfNat a) * (intOfNat b) = intOfNat (a * b) :=
+  by
+    rw[intof_nat_to_rep]
+    simp only [(· * ·)]
+    apply Quotient.sound
+    unfold instHasEquivOfSetoid intRepSetoid IntRep.Equivalent
+    simp
+    rw[MyNat.add_zero]
+    unfold MyNat.instMulNat
+    dsimp [IntRep.mul]
+    rw[MyNat.zero_mul]
+    rw[MyNat.add_zero]
+    rw[MyNat.zero_mul]
+    rw[MyNat.add_zero]
+    rw[MyNat.mul_zero]
+    rfl
+
+theorem intofnat_add (a b : Nat) :
+  (intOfNat a) + (intOfNat b) = intOfNat (a + b) :=
+  by
+    unfold intOfNat
+    rfl
+
+theorem two_squared : (.two * .two = Int.four) := by
+  unfold Int.two
+  unfold Int.four
+  rw[intofnat_mul]
+  rfl
+
+theorem one_plus_one : (Int.one + .one = .two) := by
+  unfold Int.one
+  unfold Int.two
+  rfl
+
+theorem int_mul_one ( a : Int ) : a * .one = a := by
+    refine Quotient.inductionOn a ?_
+    intro a
+    rw[<-intOfRep]
+    rw[Int.one]
+    rw[intof_nat_to_rep]
+    rw[<-mul_mk]
+    apply Quotient.sound
+    cases a with
+    | mk pos neg =>
+      simp only [(· * · )]
+
+      unfold Mul.mul instMulIntRep
+      simp
+
+      unfold IntRep.mul
+      simp
+
+      unfold instHasEquivOfSetoid intRepSetoid IntRep.Equivalent
+      dsimp[IntRep.Equivalent]
+
+      rw[MyNat.mul_one]
+      rw[MyNat.mul_zero]
+      rw[MyNat.add_zero]
+      rw[MyNat.mul_zero]
+      rw[MyNat.mul_one]
+      rw[MyNat.zero_add]
+
+theorem add_self (a : Int) : (a + a = .two * a):= by
+  rw[<-int_mul_one a]
+  rw[<-mul_add_distributes]
+  rw[one_plus_one]
+  rw[int_mul_one]
+  rw[int_mul_commutes]
+
 theorem rearrange_22k (k : Int ) :
-  (two * (two * k)) = (four * k) := sorry
+  (.two * (.two * k)) = (.four * k) :=
+  by
+    rw[<-int_mul_associates]
+    rw[two_squared]
 
 theorem rearrange_22k_2 ( k : Int ) :
-  (two * k + two * k) = (four * k) := sorry
-
-theorem int_mul_one ( a : Int ) : a * one = a := by sorry
+  (.two * k + .two * k) = (.four * k) := by
+    rw[<-mul_add_distributes]
+    rw[add_self]
+    rw[<-int_mul_associates]
+    rw[two_squared]
 
 theorem odd_squared_is_odd (n : Int) (h1 : Int.Odd n) : (Int.Odd (n * n)) :=
   by
@@ -178,7 +397,7 @@ theorem odd_squared_is_odd (n : Int) (h1 : Int.Odd n) : (Int.Odd (n * n)) :=
     unfold Int.Odd at h1
     obtain ⟨ k, hk ⟩ := h1
     rw[hk]
-    exists (two*k*k + two * k)
+    exists (.two*k*k + .two * k)
     rw[mul_add_distributes]
     rw[mul_add_distributes]
     rw[int_mul_one]
@@ -204,14 +423,14 @@ theorem odd_squared_is_odd (n : Int) (h1 : Int.Odd n) : (Int.Odd (n * n)) :=
 
 def Int.gcd : Int -> Int ->  Int := by sorry
 
-theorem one_is_unit (a : Int) (h1: a.Divides one) : a = one :=
+theorem one_is_unit (a : Int) (h1: a.Divides .one) : a = .one :=
   by sorry
 
-theorem int_two_neq_one : two ≠ one :=
+theorem int_two_neq_one : Int.two ≠ Int.one :=
   by
     simp [(· ≠ · )]
-    unfold two
-    unfold one
+    unfold Int.two
+    unfold Int.one
     intro h
     have h2 := Quotient.exact h
     simp [(· ≈ · )] at h2
@@ -245,7 +464,7 @@ theorem even_square_means_even (a : Int) (h1 : Int.Even (a*a)) : (Int.Even a) :=
     have h4 := even_means_not_odd (a * a) h1
     contradiction
 
-theorem even_is_mult_of_two (a : Int) (h1 : Int.Even a) : (∃ (k : Int), a = two * k) :=
+theorem even_is_mult_of_two (a : Int) (h1 : Int.Even a) : (∃ (k : Int), a = .two * k) :=
   by
     unfold Int.Even at h1
     unfold Int.Divides at h1
@@ -256,13 +475,13 @@ theorem common_div_divides_gcd ( a b d : Int )
   (h2 : d.Divides b) :
   (d.Divides (Int.gcd a b)) := sorry
 
-theorem even_means_two_divides (a : Int ) (h1 : Int.Even a) : two.Divides a :=
+theorem even_means_two_divides (a : Int ) (h1 : Int.Even a) : Int.two.Divides a :=
   by
     unfold Int.Even at h1
     exact h1
 
 theorem root2_irrational_1 :
-  (¬ ∃ (a b : Int), (Int.gcd a b = one) ∧ two * b * b = a * a) :=
+  (¬ ∃ (a b : Int), (Int.gcd a b = Int.one) ∧ .two * b * b = a * a) :=
   by
     intro h
     obtain ⟨ a, ha ⟩ := h
@@ -270,7 +489,7 @@ theorem root2_irrational_1 :
     have h1 := hb.left
     have h2 := hb.right
 
-    have h3 : (two.Divides (a * a)) := by
+    have h3 : (Int.two.Divides (a * a)) := by
       unfold Int.Divides
       exists (b * b)
       rw[<-int_mul_associates]
@@ -282,7 +501,7 @@ theorem root2_irrational_1 :
 
     have h5 : (Int.Even a) := even_square_means_even a h4
 
-    have h6 : (∃ (k : Int), a = two * k) := even_is_mult_of_two a h5
+    have h6 : (∃ (k : Int), a = .two * k) := even_is_mult_of_two a h5
 
     obtain ⟨ k, hk ⟩ := h6
 
@@ -290,7 +509,7 @@ theorem root2_irrational_1 :
     rw[int_mul_associates] at h2
     rw[int_mul_associates] at h2
 
-    have h7 := mul_left_divides (b * b) (k * (two * k)) two h2
+    have h7 := mul_left_divides (b * b) (k * (.two * k)) .two h2
     rw[<-int_mul_associates] at h7
     rw[int_mul_commutes] at h7
     rw[int_mul_associates] at h7
@@ -303,13 +522,13 @@ theorem root2_irrational_1 :
 
     have hbeven := even_square_means_even b h8
 
-    have twoa : (two.Divides a) := even_means_two_divides a h5
-    have twob : (two.Divides b) := even_means_two_divides b hbeven
+    have twoa : (Int.two.Divides a) := even_means_two_divides a h5
+    have twob : (Int.two.Divides b) := even_means_two_divides b hbeven
 
-    have h9 : (two.Divides (Int.gcd a b )) := common_div_divides_gcd a b two twoa twob
+    have h9 : (Int.two.Divides (Int.gcd a b )) := common_div_divides_gcd a b .two twoa twob
 
     rw[h1] at h9
-    have h10 : (two = one) := one_is_unit two h9
+    have h10 : (Int.two = Int.one) := one_is_unit .two h9
     have h12 := And.intro h10 int_two_neq_one
     simp at h12
 
