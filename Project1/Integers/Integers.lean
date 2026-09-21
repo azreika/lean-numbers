@@ -401,6 +401,9 @@ theorem mul_mk ( x y : IntRep ) :
     unfold IntRep.mul
     rfl
 
+theorem mul_expands ( x y : IntRep) :
+  x * y = x.mul y := rfl
+
 theorem inteq_means_zero ( x : IntRep ) ( h1 : x.pos = x.neg ) :
   x ≈ zero_int_rep :=
   by

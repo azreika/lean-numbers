@@ -188,14 +188,49 @@ theorem left_divides ( p m : Int ) :
     unfold Int.Divides
     exists m
 
+theorem intrep_expand_negate (a b : IntRep) : a * (b.negate) = (a * b).negate :=
+  by
+    rw[mul_expands]
+    rw[mul_expands]
+    cases a with
+    | mk apos aneg =>
+      cases b with
+      | mk bpos bneg =>
+        dsimp [IntRep.negate]
+        dsimp [IntRep.mul]
+
 theorem int_expand_negate ( a b : Int ) :
-  a * (b.negate) = (a * b).negate := sorry
+  a * (b.negate) = (a * b).negate :=
+  by
+    refine Quotient.inductionOn₂ a b ?_
+    intro a b
+    rw[<-intOfRep]
+    rw[<-intOfRep]
+    rw[<-negate_mk]
+    rw[<-mul_mk]
+    rw[<-mul_mk]
+    rw[<-negate_mk]
+    rw[intrep_expand_negate]
 
-theorem drop_negate ( a : Int ) (h1: a.negate = b.negate ) :
-  a = b := sorry
+theorem add_negate ( a b : Int ) (h1: a = b) : a.negate = b.negate := by rw[h1]
 
-theorem add_negate ( a : Int ) (h1: a = b) :
-  a.negate = b.negate := sorry
+theorem double_negate ( a : Int ) : a.negate.negate = a :=
+  by
+    refine Quotient.inductionOn a ?_
+    intro a
+    rw[<-intOfRep]
+    rw[<-negate_mk]
+    rw[<-negate_mk]
+    unfold IntRep.negate
+    simp
+
+theorem drop_negate ( a b : Int ) (h1: a.negate = b.negate ) :
+  a = b :=
+  by
+    have h2 := add_negate a.negate b.negate h1
+    rw[double_negate] at h2
+    rw[double_negate] at h2
+    exact h2
 
 theorem divides_neg ( p m : Int ) (h1 : p.Divides m ):
   (p.Divides m.negate) :=
