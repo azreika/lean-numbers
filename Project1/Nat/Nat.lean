@@ -40,5 +40,4 @@ def Nat.Divides ( a b : Nat ) : Prop :=
 def Nat.Prime (p : Nat) : Prop :=
   (p ≠ .one) ∧ ∀ k : Nat, (Divides k p) → (k = .one ∨ k = p)
 
-
 end MyNat
