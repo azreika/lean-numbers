@@ -53,6 +53,17 @@ theorem int_add_zero (a : Int) :
       rw[MyNat.add_zero]
       exact equi_refl (IntRep.mk pos neg)
 
+theorem intrep_add_left_congr ( a b c : IntRep ) ( h1 : a = b ) :
+  (c + a = c + b) :=
+  by
+    rw[h1]
+
+
+theorem intrep_add_right_congr ( a b c : IntRep ) ( h1 : a = b ) :
+  (a + c = b + c) :=
+  by
+    rw[h1]
+
 theorem add_left_congr ( a b c : Int ) ( h1 : a = b ) :
   (c + a = c + b) :=
   by
@@ -62,6 +73,14 @@ theorem add_right_congr ( a b c : Int ) ( h1 : a = b ) :
 (a + c = b + c) :=
   by
     rw[h1]
+
+theorem intrep_add_commutes ( a b : IntRep ) : a + b = b + a :=
+  by
+    simp only [(· + ·)]
+    dsimp [Add.add]
+    dsimp [IntRep.add]
+    rw[add_commutes]
+    rw (occs := .pos [2] ) [add_commutes]
 
 theorem intrep_mul_associates (a b c : IntRep ) :
   (a * b) * c = a * (b * c) :=
@@ -243,8 +262,91 @@ theorem divides_neg ( p m : Int ) (h1 : p.Divides m ):
     apply add_negate
     exact hk
 
+
+
+theorem even_squared_is_even (n : Int) (h1: Int.Even n) : (Int.Even (n * n)) :=
+  by
+    unfold Int.Even
+    unfold Int.Even at h1
+    unfold Int.Divides at h1
+    obtain ⟨ k , hk ⟩ := h1
+    rw[hk]
+    rw[int_mul_associates]
+    unfold Int.Divides
+    exists (k * (.two * k))
+
+theorem intrep_mul_def (a b : IntRep ) :
+  a * b = (IntRep.mk (a.pos * b.pos + a.neg * b.neg) (a.pos * b.neg + a.neg * b.pos)) :=
+  by rfl
+
+theorem pos_expands (a b : IntRep) :
+  (a + b).pos = a.pos + b.pos := by rfl
+
+theorem neg_expands (a b : IntRep) :
+  (a + b).neg = a.neg + b.neg := by rfl
+
+theorem intrep_mul_add_distributes ( a b c : IntRep) :
+  a * (b + c) = a * b + a * c :=
+  by
+    rw[mul_expands]
+    rw[mul_expands]
+    rw[mul_expands]
+    cases a with
+    | mk apos aneg =>
+      dsimp [IntRep.mul]
+      rw[add_combines]
+      rw[pos_expands]
+      rw[neg_expands]
+      rw[MyNat.mul_add_distributes]
+      rw[MyNat.mul_add_distributes]
+      rw[MyNat.mul_add_distributes]
+      rw[MyNat.mul_add_distributes]
+      cases b with
+      | mk bpos bneg =>
+        dsimp [IntRep.mul]
+        rw[add_combines]
+        cases c with
+        | mk cpos cneg =>
+          dsimp [IntRep.mul]
+          rw[add_combines]
+          rw[add_combines]
+          rw[add_combines]
+          rw[int_rep_add_associates]
+          rw[int_rep_add_associates]
+          apply intrep_add_left_congr
+          rw[<-int_rep_add_associates]
+          rw[<-int_rep_add_associates]
+          apply intrep_add_right_congr
+          rw[intrep_add_commutes]
+
+theorem mul_add_distributes ( a b c : Int ) :
+  a * (b + c) = a * b + a * c :=
+  by
+    refine Quotient.inductionOn₃ a b c ?_
+    intro a b c
+    rw[<-intOfRep]
+    rw[<-intOfRep]
+    rw[<-intOfRep]
+    rw[<-mul_mk]
+    rw[<-mul_mk]
+    rw[<-add_mk]
+    rw[<-add_mk]
+    rw[<-mul_mk]
+    rw[intrep_mul_add_distributes]
+
 theorem divides_sum ( p a b : Int ) (h1: p.Divides a) (h2 : p.Divides b) :
-  (p.Divides (a + b)) := sorry
+  (p.Divides (a + b)) :=
+  by
+    dsimp [Int.Divides] at h1
+    dsimp [Int.Divides] at h2
+    obtain ⟨ k, hk ⟩ := h1
+    obtain ⟨ m, hm ⟩ := h2
+    dsimp [Int.Divides]
+    exists ( m + k )
+    rw [mul_add_distributes]
+    rw[hk]
+    rw[hm]
+    rw[int_add_commutes]
 
 theorem prime_divisible_sum
     ( p a b : Int )
@@ -273,68 +375,6 @@ theorem prime_divisible_sum
     have h6 := divides_sum p (p*m) (p*k).negate h3 h5
     rw[<-h2] at h6
     exact h6
-
-theorem even_squared_is_even (n : Int) (h1: Int.Even n) : (Int.Even (n * n)) :=
-  by
-    unfold Int.Even
-    unfold Int.Even at h1
-    unfold Int.Divides at h1
-    obtain ⟨ k , hk ⟩ := h1
-    rw[hk]
-    rw[int_mul_associates]
-    unfold Int.Divides
-    exists (k * (.two * k))
-
-theorem intrep_mul_def (a b : IntRep ) :
-  a * b = (IntRep.mk (a.pos * b.pos + a.neg * b.neg) (a.pos * b.neg + a.neg * b.pos)) :=
-  by rfl
-
-theorem pos_expands (a b : IntRep) :
-  (a + b).pos = a.pos + b.pos := sorry
-
-theorem neg_expands (a b : IntRep) :
-  (a + b).neg = a.neg + b.neg := sorry
-
-theorem intrep_mul_add_distributes ( a b c : IntRep) :
-  a * (b + c) = a * b + a * c :=
-  by
-    cases a with
-    | mk apos aneg =>
-      rw[intrep_mul_def]
-      rw[add_combines]
-      simp
-      rw[pos_expands]
-      rw[neg_expands]
-      rw[MyNat.mul_add_distributes]
-      rw[MyNat.mul_add_distributes]
-      rw[MyNat.mul_add_distributes]
-      rw[MyNat.mul_add_distributes]
-      cases b with
-      | mk bpos bneg =>
-        rw[intrep_mul_def]
-        rw[add_combines]
-        simp
-        cases c with
-        | mk cpos cneg =>
-          rw[intrep_mul_def]
-          rw[add_combines]
-          simp
-          sorry
-
-theorem mul_add_distributes ( a b c : Int ) :
-  a * (b + c) = a * b + a * c :=
-  by
-    refine Quotient.inductionOn₃ a b c ?_
-    intro a b c
-    rw[<-intOfRep]
-    rw[<-intOfRep]
-    rw[<-intOfRep]
-    rw[<-mul_mk]
-    rw[<-mul_mk]
-    rw[<-add_mk]
-    rw[<-add_mk]
-    rw[<-mul_mk]
-    rw[intrep_mul_add_distributes]
 
 theorem mul_left_congr ( a b c : Int ) ( h1 : a = b ) : (c * a = c * b) := by rw[h1]
 
