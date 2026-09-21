@@ -354,6 +354,7 @@ def Int.mul : Int -> Int -> Int :=
   )
 
 def zero_int_rep := IntRep.mk .zero .zero
+def IntRep.zero := IntRep.mk .zero .zero
 
 def Int.zero := intOfNat .zero
 def Int.one := intOfNat .one

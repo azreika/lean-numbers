@@ -4,6 +4,7 @@ import Project1.Nat.Properties
 import Std
 
 namespace MyInt
+open Classical
 
 abbrev mul_associates := MyNat.mul_associates
 
@@ -262,8 +263,6 @@ theorem divides_neg ( p m : Int ) (h1 : p.Divides m ):
     apply add_negate
     exact hk
 
-
-
 theorem even_squared_is_even (n : Int) (h1: Int.Even n) : (Int.Even (n * n)) :=
   by
     unfold Int.Even
@@ -378,12 +377,226 @@ theorem prime_divisible_sum
 
 theorem mul_left_congr ( a b c : Int ) ( h1 : a = b ) : (c * a = c * b) := by rw[h1]
 
-theorem additive_inverse ( a : Int) : (a + a.negate = .zero) := sorry
+theorem intrep_add (a b: IntRep) : (a + b = a.add b) := rfl
 
-theorem neg_expands_mul ( a b : Int ) : (a * b).negate = a * (b.negate) := sorry
+theorem intrep_additive_inverse (a : IntRep ) : (a + a.negate ≈ IntRep.zero ) :=
+  by
+    cases a with
+    | mk pos neg =>
+      dsimp [IntRep.negate]
+      apply unfold_intrep_equiv_congr
+      dsimp [IntRep.Equivalent]
+      rw[IntRep.zero]
+      rw[MyNat.add_zero]
+      rw[MyNat.zero_add]
+      rw[pos_expands]
+      rw[neg_expands]
+      dsimp [IntRep.neg]
+      rw[add_commutes]
+
+theorem additive_inverse ( a : Int) : (a + a.negate = .zero) :=
+  by
+    refine Quotient.inductionOn a ?_
+    intro a
+    apply Quotient.sound
+    rw [<-intrep_add]
+    have h2 := intrep_additive_inverse a
+    exact h2
+
+theorem neg_expands_mul ( a b : Int ) : (a * b).negate = a * (b.negate) :=
+  by
+    refine Quotient.inductionOn₂ a b ?_
+    intro a b
+    apply Quotient.sound
+    dsimp[IntRep.negate]
+    apply unfold_intrep_equiv_congr
+    dsimp[IntRep.Equivalent]
+    dsimp[IntRep.mul]
+
+theorem zero_or_nonzero (a : Int) : (a = .zero ∨ a ≠ .zero) := by
+  apply Classical.em
+
+theorem intrep_zero_pos : IntRep.zero.pos = .zero := rfl
+theorem intrep_zero_neg : IntRep.zero.neg = .zero := rfl
+theorem intrep_zero_negate : IntRep.zero.negate = IntRep.zero := rfl
+
+theorem dn ( p : Prop) : ¬¬p -> p := by simp
+
+theorem intrep_eq_negate (a b : IntRep) (h1 : a ≈ b) :
+  (a.negate ≈ b.negate) := sorry
+
+theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
+  (a ≈ .zero ∨ b ≈ .zero):=
+  by
+    have h0 : (a ≈ .zero ∨ ¬ (a ≈ .zero)) := Classical.em (a ≈ .zero)
+    cases h0 with
+    | inl hh =>
+    left
+    exact hh
+    | inr hh =>
+    right
+    have h2 := unfold_intrep_equiv (a*b) .zero h1
+
+    unfold IntRep.Equivalent at h2
+    rw[intrep_zero_neg] at h2
+    rw[MyNat.add_zero] at h2
+    rw[intrep_zero_pos] at h2
+    rw[MyNat.zero_add] at h2
+    apply unfold_intrep_equiv_congr
+    dsimp [IntRep.Equivalent]
+    rw[intrep_zero_neg]
+    rw[MyNat.add_zero]
+    rw[intrep_zero_pos]
+    rw[MyNat.zero_add]
+
+    cases a with
+    | mk apos aneg =>
+    cases b with
+    | mk bpos bneg =>
+    rw[mul_expands] at h2
+    dsimp [IntRep.mul] at h2
+    dsimp [IntRep.pos]
+
+    induction bpos generalizing apos aneg bneg with
+    | zero =>
+    rw[MyNat.mul_zero] at h2
+    rw[MyNat.mul_zero] at h2
+    rw[MyNat.zero_add] at h2
+    rw[MyNat.add_zero] at h2
+    apply dn
+    intro h0
+
+    have h0' : (bneg ≠ MyNat.Nat.zero) := by
+      symm
+      simp
+      exact h0
+    have h3 : (aneg = apos) := MyNat.div_cancels aneg apos bneg h0' h2
+    have h4 := inteq_means_zero (IntRep.mk apos aneg)
+    simp at h4
+    have h5 := h4 h3.symm
+    have h6 := And.intro h5 hh
+    contradiction
+    | succ bpos ih =>
+    cases bpos with
+      | zero =>
+      rw[<-MyNat.Nat.one] at h2
+      rw[MyNat.mul_one] at h2
+      rw[MyNat.mul_one] at h2
+      rw[mul_expands] at h1
+      dsimp [IntRep.mul] at h1
+      rw[<-MyNat.Nat.one] at h1
+      rw[MyNat.mul_one] at h1
+      rw[MyNat.mul_one] at h1
+      cases bneg with
+        | zero =>
+        contradiction
+        | succ bneg =>
+        rw[MyNat.succ_same]
+        have h3 := ih apos aneg hh bneg
+        rw[mul_expands] at h3
+        dsimp[IntRep.mul] at h3
+        rw[MyNat.mul_zero] at h3
+        rw[MyNat.zero_add] at h3
+        rw[MyNat.mul_zero] at h3
+        rw[MyNat.add_zero] at h3
+
+        rw[MyNat.add_one] at h2
+        rw[MyNat.mul_add_distributes] at h2
+        rw[MyNat.mul_one] at h2
+        rw[MyNat.mul_add_distributes] at h2
+        rw[MyNat.mul_one] at h2
+        rw[MyNat.add_associates] at h2
+        have h2 := MyNat.add_left_cancel (aneg + aneg * bneg) (apos * bneg + aneg) apos h2
+
+        simp only [(· ≈ ·)] at h3
+        dsimp [instHasEquivOfSetoid, Setoid.r, IntRep.Equivalent] at h3
+        rw[intrep_zero_pos] at h3
+        rw[MyNat.zero_add] at h3
+        rw[intrep_zero_neg] at h3
+        rw[MyNat.add_zero] at h3
+        rw[MyNat.add_commutes] at h2
+        have h2 := MyNat.add_right_cancel (aneg * bneg) (apos * bneg) aneg h2
+        have h3 := h3 h2 h2
+        exact h3
+      | succ bpos =>
+      cases bneg with
+      | zero =>
+      rw[MyNat.mul_zero] at h2
+      rw[MyNat.mul_zero] at h2
+      rw[MyNat.add_zero] at h2
+      rw[MyNat.zero_add] at h2
+      have h0 : (bpos.succ.succ ≠ .zero) := MyNat.succed_is_nonzero bpos.succ
+      have h3 : (apos = aneg) := MyNat.div_cancels apos aneg (bpos.succ.succ) h0 h2
+      have h4 := inteq_means_zero (IntRep.mk apos aneg)
+      simp at h4
+      have h5 := h4 h3
+      have h6 := And.intro h5 hh
+      contradiction
+      | succ bneg =>
+      rw[MyNat.succ_same]
+      have h3 := ih apos aneg hh bneg
+      rw[mul_expands] at h3
+      dsimp[IntRep.mul] at h3
+      rw[MyNat.add_one] at h2
+      rw[MyNat.mul_add_distributes] at h2
+      rw[MyNat.mul_one] at h2
+      rw[MyNat.mul_add_distributes] at h2
+      rw[MyNat.mul_one] at h2
+      rw[MyNat.add_associates] at h2
+      rw[MyNat.add_one] at h2
+      rw[MyNat.add_one] at h2
+      rw[MyNat.mul_add_distributes] at h2
+      rw[MyNat.mul_add_distributes] at h2
+      rw[MyNat.mul_add_distributes] at h2
+      rw[MyNat.mul_add_distributes] at h2
+
+      rw[MyNat.mul_one] at h2
+      rw[MyNat.mul_one] at h2
+      rw[MyNat.add_associates] at h2
+      rw[MyNat.add_associates] at h2
+      have h2 := MyNat.add_left_cancel (apos + (apos * bpos + (aneg + aneg * bneg))) (apos * bneg + (aneg + (aneg + aneg * bpos))) apos h2
+
+      simp only [(· ≈ ·)] at h3
+      dsimp [instHasEquivOfSetoid, Setoid.r, IntRep.Equivalent] at h3
+      rw[intrep_zero_pos] at h3
+      rw[MyNat.zero_add] at h3
+      rw[intrep_zero_neg] at h3
+      rw[MyNat.add_zero] at h3
+      rw[MyNat.add_one] at h3
+
+      rw[MyNat.mul_add_distributes] at h3
+      rw[MyNat.mul_add_distributes] at h3
+      rw[MyNat.mul_one] at h3
+      rw[<-MyNat.add_associates] at h2
+      rw[<-MyNat.add_associates] at h2
+      rw[<-MyNat.add_associates] at h2
+      rw[<-MyNat.add_associates] at h2
+      rw (occs := .pos [2]) [MyNat.add_commutes] at h2
+      rw (occs := .pos [5]) [MyNat.add_commutes] at h2
+      rw[MyNat.add_associates] at h2
+      rw[MyNat.add_associates] at h2
+      rw[MyNat.add_associates] at h2
+      have h2 := MyNat.add_left_cancel (apos + (apos * bpos + aneg * bneg)) (apos * bneg + aneg +aneg*bpos) aneg h2
+      rw[MyNat.add_associates] at h3
+      rw[MyNat.add_associates] at h2
+      have h4 := h3 h2 h2
+      rw[add_commutes] at h4
+      rw[<-MyNat.succ_add_one] at h4
+      exact h4
+
 
 theorem mul_to_zero ( a b : Int ) (h1 : a * b = .zero) :
-  (a = .zero ∨ b = .zero) := sorry
+  (a = .zero ∨ b = .zero) :=
+  by
+    have h2 : (a = .zero ∨ a ≠ .zero) := zero_or_nonzero a
+    cases h2 with
+    | inl hn =>
+    left
+    exact hn
+    | inr hn =>
+    right
+
+    sorry
 
 theorem mul_left_divides( a b c : Int ) ( h1 : c * a = c * b ) (hc : c ≠ .zero) :
   (a = b) :=
