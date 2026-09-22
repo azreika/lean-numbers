@@ -277,11 +277,18 @@ theorem negate_mk ( x : IntRep ) :
     unfold IntRep.negate
     rfl
 
+
 instance : Add Int where
   add := Int.add
 
 instance : Mul Int where
   mul := Int.mul
+
+def Int.subtract (a b : Int): Int :=
+  a + b.negate
+
+instance : Sub Int where
+  sub := Int.subtract
 
 theorem add_mk ( x y : IntRep ) :
   intOfRep (x + y) = ((intOfRep x) + (intOfRep y)):=

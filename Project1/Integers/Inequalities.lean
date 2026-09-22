@@ -24,6 +24,12 @@ instance : LE IntRep where
 instance : LE Int where
   le := Int.lte
 
+def Int.lt (a b : Int) : Prop :=
+  a ≤ b ∧ a ≠ b
+
+instance : LT Int where
+  lt := Int.lt
+
 theorem lte_trans ( a b c : Int) (h1 : a ≤ b ) (h2 : b ≤ c) :
   (a ≤ c) := sorry
 
@@ -31,6 +37,7 @@ theorem prod_geq_means_op_geq (a b : Int) (h1 : .zero ≤ a * b) (h2 : .zero ≤
   (.zero ≤ b) := sorry
 
 theorem zero_leq_one : (Int.zero ≤ Int.one) := sorry
+theorem zero_leq_two : (Int.zero ≤ Int.two) := sorry
 
 theorem eq_means_leq ( a b : Int ) (h1 : a = b) :
   (a ≤ b ) := sorry
@@ -42,10 +49,28 @@ theorem lte_antisym ( a b : Int ) (h1 : Int.lte a b ) (h2 : Int.lte b a) :
   (a = b) := by
   sorry
 
-theorem zero_lt_means_one_lte ( a : Int ) (h1: .zero ≤ a ) (h2 : a ≠ .zero) :
+theorem zero_lt_means_one_lte ( a : Int ) (h1: .zero < a) :
   (.one ≤ a) := sorry
+
+theorem geq_one_means_minus_geq_zero (a : Int) (h1 : .one ≤ a) :
+  (.zero ≤ (a - .one)) :=
+    sorry
 
 theorem prod_nonzero_means_op_nonzero (a b : Int) (h1 : a * b ≠ .zero) :
   (a ≠ .zero) := sorry
+
+theorem zero_lt_means_neq_zero (a : Int) (h1 : .zero < a) :
+  (a ≠ .zero) := sorry
+
+theorem lte_less_sum (a b : Int) (h1 : b ≥ .zero) :
+  a ≤ a + b := sorry
+
+theorem lt_means_lte (a b : Int) (h1 : a < b ) : (a ≤ b ) := sorry
+
+theorem not_lt_means_flip_lte ( a b : Int) (h1 : ¬ (a < b)) :
+  (b ≤ a) := sorry
+
+theorem integer_gaps (a b : Int) (h1 : a ≤ b) :
+  ∃ (m : Int), (.zero ≤ m) ∧ (b = a + m) := sorry
 
 end MyInt

@@ -108,7 +108,6 @@ theorem add_right_congr ( a b c : Nat ) ( h1 : a = b ) :
       have h2 := ih a b h1
       exact h2
 
-
 theorem add_left_congr ( a b c : Nat ) ( h1 : a = b ) :
   (c + a = c + b) :=
   by

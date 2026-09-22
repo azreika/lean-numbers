@@ -65,6 +65,15 @@ theorem intrep_add_right_congr ( a b c : IntRep ) ( h1 : a = b ) :
   by
     rw[h1]
 
+theorem add_right_cancel ( a b c : Int ) (h1 : a + c = b + c) :
+  (a = b) := by
+    sorry
+
+theorem add_left_cancel ( a b c : Int ) (h1 : a + c = b + c) :
+  (a = b) := by
+    sorry
+
+
 theorem add_left_congr ( a b c : Int ) ( h1 : a = b ) :
   (c + a = c + b) :=
   by
@@ -779,4 +788,7 @@ theorem odd_squared_is_odd (n : Int) (h1 : Int.Odd n) : (Int.Odd (n * n)) :=
     rw[int_mul_associates]
     rw[rearrange_22k]
 
+theorem sub_is_plus_neg (a b : Int) : (a - b = a + (b.negate)) := sorry
+
+theorem negate_to_mul_neg_one ( a : Int) : a.negate = (a * Int.one.negate) := sorry
 end MyInt
