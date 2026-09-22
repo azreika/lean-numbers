@@ -76,4 +76,7 @@ theorem not_lte_means_flip_lt ( a b : Int) (h1 : ¬ (a ≤ b)) :
 theorem integer_gaps (a b : Int) (h1 : a ≤ b) :
   ∃ (m : Int), (.zero ≤ m) ∧ (b = a + m) := sorry
 
+theorem negate_lte ( a b : Int ) (h1 : a ≤ b) :
+  a.negate ≥ b.negate := sorry
+
 end MyInt

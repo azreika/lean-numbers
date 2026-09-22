@@ -253,13 +253,14 @@ theorem double_negate ( a : Int ) : a.negate.negate = a :=
     unfold IntRep.negate
     simp
 
-theorem drop_negate ( a b : Int ) (h1: a.negate = b.negate ) :
-  a = b :=
+theorem drop_negate ( a b : Int ) :
+  (a.negate = b.negate) ↔ a = b :=
   by
-    have h2 := add_negate a.negate b.negate h1
-    rw[double_negate] at h2
-    rw[double_negate] at h2
-    exact h2
+    sorry
+    -- have h2 := add_negate a.negate b.negate h1
+    -- rw[double_negate] at h2
+    -- rw[double_negate] at h2
+    -- exact h2
 
 theorem divides_neg ( p m : Int ) (h1 : p.Divides m ):
   (p.Divides m.negate) :=
@@ -791,4 +792,9 @@ theorem odd_squared_is_odd (n : Int) (h1 : Int.Odd n) : (Int.Odd (n * n)) :=
 theorem sub_is_plus_neg (a b : Int) : (a - b = a + (b.negate)) := sorry
 
 theorem negate_to_mul_neg_one ( a : Int) : a.negate = (a * Int.one.negate) := sorry
+
+theorem zero_negate : (Int.zero = Int.zero.negate) :=
+  by
+    sorry
+
 end MyInt
