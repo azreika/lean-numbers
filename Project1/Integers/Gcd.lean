@@ -129,9 +129,13 @@ theorem euclidean ( a b : Int ) (ha : .zero ≤ a) (hb : .zero < b):
     have b_neq_zero : b ≠ .zero := zero_lt_means_neq_zero b hb
     contradiction
 
-theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hb : b ≥ .zero) :
+theorem gt_zero_plus_gte_zero (a b : Int) (h1: a > .zero) (h2 : b ≥ .zero) :
+  (a + b > .zero) := sorry
+
+theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hbz : b > .zero) :
   ∃ (d : Int), IsGcd a b d :=
   by
+    have hb : (b ≥ .zero) := lt_means_lte .zero b hbz
     let pos_com_set : Set Int := PosLinearCombinations a b
     have h_has_element : (is_nonempty pos_com_set) := by
       unfold is_nonempty
@@ -146,14 +150,31 @@ theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hb : b ≥ .zero) :
       exists Int.one
       rw[int_mul_one]
       rw[int_mul_one]
-      sorry
-    have h_has_min : (has_min pos_com_set) := sorry
+      have hx : (b + a > .zero) := gt_zero_plus_gte_zero b a hbz ha
+      rw[int_add_commutes] at hx
+      exact hx
+    have all_pos : (∀ (x : Int), x ∈ pos_com_set → x ≥ .zero) := by
+      intro x
+      simp only [(· ∈ · )]
+      unfold pos_com_set
+      unfold PosLinearCombinations
+      intro hh
+      have hh2 := hh.right
+      exact lt_means_lte Int.zero x hh2
+    have h_has_min : (has_min pos_com_set) :=
+      pos_nonempty_has_min pos_com_set h_has_element all_pos
     unfold has_min at h_has_min
     obtain ⟨ d, hd ⟩ := h_has_min
     exists (d)
     unfold IsGcd
-    have d_in_poscom : (d ∈ pos_com_set) := sorry
-    have d_gt_zero : (.zero < d) := sorry
+    have d_in_poscom : (d ∈ pos_com_set) := by
+      unfold is_min at hd
+      exact hd.left
+    have d_gt_zero : (.zero < d) := by
+      simp only [(· ∈ · )] at d_in_poscom
+      unfold pos_com_set at d_in_poscom
+      unfold PosLinearCombinations at d_in_poscom
+      exact d_in_poscom.right
 
     have d_divides_a : (d.Divides a ) := by
       have hh := euclidean a d ha d_gt_zero
@@ -163,7 +184,9 @@ theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hb : b ≥ .zero) :
       have hq2 := hq.right.left
       have hq3 := hq.right.right
 
-      have r_eq_zero : (r = .zero) := by sorry
+      have r_eq_zero : (r = .zero) := by
+        sorry
+
       unfold Int.Divides
       exists q
       rw[r_eq_zero] at hq1
@@ -365,19 +388,25 @@ theorem gcd_of_neg_is_gcd_both ( a b d : Int ) (h1 : IsGcd a.negate b.negate d) 
     have h3 := gcd_of_neg_is_gcd_1 a b d h2
     exact h3
 
+theorem negative_zero_lte_from_lt ( a : Int) (h1 : a < .zero) :
+  (a.negate > .zero) :=
+  by
+
+    sorry
+
 theorem negative_zero_lte ( a : Int) (h1 : ¬(.zero ≤ a )) :
-  (a.negate ≥ .zero) :=
+  (a.negate > .zero) :=
   by
     have h2 := not_lte_means_flip_lt Int.zero a h1
     have h3 := lt_means_lte a Int.zero h2
     have h4 := negate_lte a Int.zero h3
     rw[<-zero_negate] at h4
-    exact h4
+    by_cases h: a=.zero
+    rw[h] at h1
+    contradiction
 
-theorem negative_zero_lte_from_lt ( a : Int) (h1 : a < .zero) :
-  (a.negate ≥ .zero) :=
-  by
-    sorry
+    apply negative_zero_lte_from_lt
+    exact h2
 
 theorem lte_self ( a : Int ) : (a ≤ a) :=
   by
@@ -388,10 +417,12 @@ theorem exists_gcd_b0_neg (a : Int) (ha : a < .zero) :
   ∃ ( d : Int), IsGcd a .zero d :=
   by
     have h0 : (Int.zero ≥ .zero) := lte_self Int.zero
-    have hh : (a.negate ≥  .zero) := negative_zero_lte_from_lt a ha
-    have hh3 : (∃ (d : Int), IsGcd (a.negate) .zero d ) := by
-      exact exists_gcd_pos a.negate .zero hh h0
+    have hh : (a.negate > .zero) := negative_zero_lte_from_lt a ha
+    have hh3 : (∃ (d : Int), IsGcd .zero (a.negate) d ) := by
+      exact exists_gcd_pos .zero a.negate h0 hh
     obtain ⟨d, hd ⟩ := hh3
+    have hd' := gcd_symm Int.zero a.negate d
+    rw[hd'] at hd
     have hh := gcd_of_neg_is_gcd_1 a .zero d hd
     exists d
 
@@ -423,10 +454,10 @@ theorem exists_gcd (a b : Int):
     by_cases ha : Int.zero ≤ a
     by_cases hb : Int.zero ≤ b
     have hb_gt_zero : (.zero < b) := lte_and_nonequal_means_lt Int.zero b hb hb0
-    exact exists_gcd_pos a b ha hb
+    exact exists_gcd_pos a b ha hb_gt_zero
 
     have hh := not_lte_means_flip_lt Int.zero b hb
-    have hh2 : (b.negate ≥ .zero) := negative_zero_lte b hb
+    have hh2 : (b.negate > .zero) := negative_zero_lte b hb
 
     have hh3 : (∃ (d : Int), IsGcd a (b.negate) d) := by
       exact exists_gcd_pos a b.negate ha hh2
@@ -436,18 +467,21 @@ theorem exists_gcd (a b : Int):
     exact hd
 
     by_cases hb : Int.zero ≤ b
-    have hh : (a.negate ≥  .zero) := negative_zero_lte a ha
+    have hh : (a.negate > .zero) := negative_zero_lte a ha
+    have hbz : (b > .zero) := by
+      have hx := And.intro hb hb0
+      exact hx
     have hh3 : (∃ (d : Int), IsGcd (a.negate) b d ) := by
-      exact exists_gcd_pos a.negate b hh hb
+      exact exists_gcd_pos a.negate b (lt_means_lte .zero a.negate hh) hbz
     obtain ⟨ d, hd ⟩ := hh3
     exists d
     apply gcd_of_neg_is_gcd_1 a b d
     exact hd
 
-    have hha : (a.negate ≥ .zero) := negative_zero_lte a ha
-    have hhb : (b.negate ≥ .zero) := negative_zero_lte b hb
+    have hha : (a.negate > .zero) := negative_zero_lte a ha
+    have hhb : (b.negate > .zero) := negative_zero_lte b hb
     have hh3 : (∃ (d : Int), IsGcd (a.negate) (b.negate) d ) := by
-      exact exists_gcd_pos a.negate b.negate hha hhb
+      exact exists_gcd_pos a.negate b.negate (lt_means_lte .zero a.negate hha) hhb
     obtain ⟨ d, hd ⟩ := hh3
     exists d
     have hd2 := gcd_of_neg_is_gcd_both a b d hd
