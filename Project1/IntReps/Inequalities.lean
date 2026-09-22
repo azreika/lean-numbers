@@ -49,6 +49,44 @@ theorem lte_left_lemma (a1 a2 b : IntRep) (h1 : a1 ≈ a2) :
             exact h5
           exact hlt2
 
+theorem lte_right_lemma (a b1 b2 : IntRep) (h1 : b1 ≈ b2) :
+  (a.lte b1 → a.lte b2) :=
+  by
+    intro h
+    dsimp [IntRep.lte]
+    dsimp [IntRep.lte] at h
+
+    cases b1 with
+    | mk m n =>
+      cases b2 with
+      | mk u v =>
+        cases a with
+        | mk b c =>
+          simp
+          simp at h
+          have h2 := unfold_intrep_equiv (IntRep.mk m n) (IntRep.mk u v) h1
+          dsimp[IntRep.Equivalent] at h2
+
+          have h3 : (b + (u + n)) = (b + (m + v)) := MyNat.add_left_congr (u + n) (m + v) b h2.symm
+
+          have hlt : (b + v + m).lte (c + u + m) := by
+            rw (occs := .pos [2]) [add_commutes] at h3
+            rw[<-add_associates] at h3
+            have h4 := MyNat.lte_add_term (b + n) ( m + c) u h
+            rw[h3] at h4
+            rw[<-add_associates] at h4
+            rw[nat_rearrange_add] at h4
+            rw (occs := .pos [2]) [add_associates] at h4
+            rw (occs := .pos [3]) [add_commutes] at h4
+            exact h4
+          rw (occs := .pos [3] ) [MyNat.add_commutes] at hlt
+          have hlt2 : ( b + v ).lte (u + c) := by
+            rw (occs := .pos [3]) [add_commutes] at hlt
+            have hlt3 := MyNat.lte_remove_term_right ( b + v)  (c + u) m hlt
+            rw (occs := .pos [2]) [add_commutes] at hlt3
+            exact hlt3
+          exact hlt2
+
 theorem lte_respects_left (a1 a2 b : IntRep) (h1: a1 ≈ a2) :
   (a1.lte b = a2.lte b) :=
   by
@@ -60,6 +98,9 @@ theorem lte_respects_left (a1 a2 b : IntRep) (h1: a1 ≈ a2) :
 theorem lte_respects_right (a b1 b2 : IntRep) (h1: b1 ≈ b2) :
   (a.lte b1 = a.lte b2) :=
   by
-    sorry
+    apply propext
+    constructor
+    exact lte_right_lemma a b1 b2 h1
+    exact lte_right_lemma a b2 b1 h1.symm
 
 end MyInt
