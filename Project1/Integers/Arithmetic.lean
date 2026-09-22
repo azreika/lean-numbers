@@ -422,9 +422,6 @@ theorem intrep_zero_negate : IntRep.zero.negate = IntRep.zero := rfl
 
 theorem dn ( p : Prop) : ¬¬p -> p := by simp
 
-theorem intrep_eq_negate (a b : IntRep) (h1 : a ≈ b) :
-  (a.negate ≈ b.negate) := sorry
-
 theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
   (a ≈ .zero ∨ b ≈ .zero):=
   by
@@ -444,15 +441,12 @@ theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
     rw[intrep_zero_pos] at h2
     rw[MyNat.zero_add] at h2
 
-
     apply unfold_intrep_equiv_congr
     dsimp [IntRep.Equivalent]
     rw[intrep_zero_neg]
     rw[MyNat.add_zero]
     rw[intrep_zero_pos]
     rw[MyNat.zero_add]
-
-
 
     cases a with
     | mk apos aneg =>
@@ -572,10 +566,90 @@ theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
       rw[<-MyNat.succ_add_one] at h4
       exact h4
 
-theorem mul_to_zero ( a b : Int ) (h1 : a * b = .zero) :
-  (a = .zero ∨ b = .zero) :=
+theorem zero_to_intofrep_zero : (intOfRep .zero = Int.zero) := rfl
+
+theorem intofrep_eq_means_equiv ( a b : IntRep ) (h1: intOfRep a = intOfRep b):
+  (a ≈ b) := by exact Quotient.exact h1
+
+theorem intofrep_eq ( a b : IntRep ) :
+  (intOfRep a = intOfRep b) →  (a.pos + b.neg = a.neg + b.pos) :=
   by
-    sorry
+    cases a with
+    | mk apos aneg =>
+      cases b with
+      | mk bpos bneg =>
+        simp
+        intro h1
+        have h2 := intofrep_eq_means_equiv (IntRep.mk apos aneg) (IntRep.mk bpos bneg) h1
+        rw[IntRep.equiv_def] at h2
+        dsimp[IntRep.Equivalent] at h2
+        rw (occs := .pos [2]) [MyNat.add_commutes] at h2
+        exact h2
+
+theorem intrep_equi_zero ( a : IntRep ) (h1 : intOfRep a = .zero) :
+  a ≈ .zero :=
+  by
+    rw[IntRep.equiv_def]
+    dsimp [IntRep.Equivalent]
+    rw[intrep_zero_neg, MyNat.add_zero, intrep_zero_pos, MyNat.zero_add]
+    have h2 := (inteq_means_zero a).symm
+    rw[<-zero_to_intofrep_zero] at h1
+    have h3 := intofrep_eq a IntRep.zero h1
+    rw[intrep_zero_neg, intrep_zero_pos, MyNat.add_zero, MyNat.add_zero] at h3
+    exact h3
+
+theorem intrep_equi_zero_rev ( a : IntRep ) (h1 : a ≈ .zero) :
+  intOfRep a = .zero :=
+  by
+    cases a with
+    | mk apos aneg =>
+    rw[IntRep.equiv_def] at h1
+    dsimp [IntRep.Equivalent] at h1
+    rw[intrep_zero_neg] at h1
+    rw[MyNat.add_zero] at h1
+    rw[intrep_zero_pos] at h1
+    rw[MyNat.zero_add] at h1
+    dsimp [intOfRep]
+    apply Quotient.sound
+    rw[IntRep.equiv_def]
+    dsimp [IntRep.Equivalent]
+    rw[MyNat.add_zero]
+    rw[MyNat.zero_add]
+    exact h1
+
+theorem mul_to_zero ( a b : Int ) :
+  (a * b = .zero) → (a = .zero ∨ b = .zero) :=
+  by
+    refine Quotient.inductionOn₂ a b ?_
+    intro x y
+    rw[<-intOfRep]
+    rw[<-intOfRep]
+    rw[<-mul_mk]
+
+    intro h1
+    have h2 := intrep_equi_zero (x*y) h1
+    have h3 := intrep_mul_to_zero x y h2
+    cases h3 with
+    | inl hh =>
+    rw[intrep_equi_zero_rev]
+    left
+    rfl
+    exact hh
+    | inr hh =>
+    right
+    rw[intrep_equi_zero_rev]
+    exact hh
+
+theorem unique_inverse ( a b : Int ) (h1: a + b.negate = .zero) :
+  (a = b) :=
+  by
+    have h2 := add_left_congr (a + b.negate) Int.zero b h1
+    rw[int_add_commutes] at h2
+    rw[int_add_associates] at h2
+    rw (occs := .pos [2]) [int_add_commutes] at h2
+    rw[inverse_nat] at h2
+    rw[int_add_zero, int_add_zero] at h2
+    exact h2
 
 theorem mul_left_divides( a b c : Int ) ( h1 : c * a = c * b ) (hc : c ≠ .zero) :
   (a = b) :=
@@ -587,7 +661,10 @@ theorem mul_left_divides( a b c : Int ) ( h1 : c * a = c * b ) (hc : c ≠ .zero
     rw[neg_expands_mul] at h2
     rw[<-mul_add_distributes] at h2
     have h3 : (c = .zero ∨ (a + b.negate = .zero)) := mul_to_zero c (a + b.negate) h2
-    sorry
+    have h4 := Or.elim h3 hc
+    simp at h4
+    have h5 : (a = b) := unique_inverse a b h4
+    exact h5
 
 theorem intofnat_mul (a b : Nat) :
   (intOfNat a) * (intOfNat b) = intOfNat (a * b) :=
@@ -701,157 +778,5 @@ theorem odd_squared_is_odd (n : Int) (h1 : Int.Odd n) : (Int.Odd (n * n)) :=
     rw (occs := .pos [2]) [int_mul_commutes]
     rw[int_mul_associates]
     rw[rearrange_22k]
-
-def Int.gcd : Int -> Int ->  Int := by sorry
-
-theorem one_is_unit (a : Int) (h1: a.Divides .one) : a = .one :=
-  by sorry
-
-theorem int_two_neq_one : Int.two ≠ Int.one :=
-  by
-    simp [(· ≠ · )]
-    unfold Int.two
-    unfold Int.one
-    intro h
-    have h2 := Quotient.exact h
-    simp [(· ≈ · )] at h2
-    unfold instHasEquivOfSetoid at h2
-    unfold Setoid.r at h2
-    simp at h2
-    unfold intRepSetoid at h2
-    simp at h2
-    unfold IntRep.Equivalent at h2
-    simp at h2
-    rw[MyNat.add_zero] at h2
-    rw[MyNat.add_zero] at h2
-    rw[MyNat.Nat.two] at h2
-    have h3 := MyNat.succ_is_different MyNat.Nat.one
-    have h4 := And.intro h2 h3.symm
-    have bad : False := h3.symm h2
-    exact bad
-
-theorem not_even_means_odd (a : Int ) (h1 : ¬ Int.Even a) : Int.Odd a :=
-  by
-    sorry
-
-theorem even_means_not_odd (a : Int) (h1 : Int.Even a) : (¬ Int.Odd a ) := sorry
-
-theorem even_square_means_even (a : Int) (h1 : Int.Even (a*a)) : (Int.Even a) :=
-  by
-    apply Classical.byContradiction
-    intro h0
-    have h2 := not_even_means_odd a h0
-    have h3 := odd_squared_is_odd a h2
-    have h4 := even_means_not_odd (a * a) h1
-    contradiction
-
-theorem even_is_mult_of_two (a : Int) (h1 : Int.Even a) : (∃ (k : Int), a = .two * k) :=
-  by
-    unfold Int.Even at h1
-    unfold Int.Divides at h1
-    exact h1
-
-theorem common_div_divides_gcd ( a b d : Int )
-  (h1:  d.Divides a)
-  (h2 : d.Divides b) :
-  (d.Divides (Int.gcd a b)) := sorry
-
-theorem even_means_two_divides (a : Int ) (h1 : Int.Even a) : Int.two.Divides a :=
-  by
-    unfold Int.Even at h1
-    exact h1
-
-theorem intofrep_eq ( a b : IntRep ) (h1 : intOfRep a = intOfRep b) :
-  (a.pos + b.neg = a.neg + b.pos) :=
-  by
-    cases a with
-    | mk apos aneg =>
-      cases b with
-      | mk bpos bneg =>
-        simp
-        sorry
-
-theorem intrep_onlypos (a b : IntRep) (heq : a = b) (ha: a.neg = .zero) (hb: b.neg = .zero) :
-  (a.pos = b.pos) := sorry
-
-theorem intofnat_eq (a b : Nat) (h1 : intOfNat a = intOfNat b) :
-  (a = b) :=
-  by
-    induction a generalizing b with
-    | zero =>
-        dsimp [intOfNat] at h1
-        have h2 := intofrep_eq (IntRep.mk .zero .zero) (IntRep.mk b .zero) h1
-        simp at h2
-        rw[MyNat.zero_add] at h2
-        rw[MyNat.zero_add] at h2
-        exact h2
-    | succ a ih =>
-        dsimp [intOfNat] at h1
-        have h2 := intofrep_eq (IntRep.mk a.succ .zero) (IntRep.mk b .zero) h1
-        simp at h2
-        rw[MyNat.zero_add] at h2
-        rw[MyNat.add_zero] at h2
-        exact h2
-
-theorem two_neq_zero : (Int.two ≠ .zero) :=
-  by
-    intro h1
-    dsimp [Int.two, Int.zero] at h1
-    have h2 := intofnat_eq MyNat.Nat.two MyNat.Nat.zero h1
-    contradiction
-
-theorem root2_irrational_1 :
-  (¬ ∃ (a b : Int), (Int.gcd a b = Int.one) ∧ .two * b * b = a * a) :=
-  by
-    intro h
-    obtain ⟨ a, ha ⟩ := h
-    obtain ⟨ b, hb ⟩ := ha
-    have h1 := hb.left
-    have h2 := hb.right
-
-    have h3 : (Int.two.Divides (a * a)) := by
-      unfold Int.Divides
-      exists (b * b)
-      rw[<-int_mul_associates]
-      exact h2.symm
-
-    have h4 : (Int.Even (a * a)) := by
-      unfold Int.Even
-      exact h3
-
-    have h5 : (Int.Even a) := even_square_means_even a h4
-
-    have h6 : (∃ (k : Int), a = .two * k) := even_is_mult_of_two a h5
-
-    obtain ⟨ k, hk ⟩ := h6
-
-    rw[hk] at h2
-    rw[int_mul_associates] at h2
-    rw[int_mul_associates] at h2
-
-    have h7 := mul_left_divides (b * b) (k * (.two * k)) .two h2
-    rw[<-int_mul_associates] at h7
-    rw[int_mul_commutes] at h7
-    rw[int_mul_associates] at h7
-    rw (occs := .pos [2]) [int_mul_commutes] at h7
-    rw[int_mul_associates] at h7
-
-    have h8 : (Int.Even (b * b)) := by
-      unfold Int.Even
-      exists (k * k)
-      have h9 := h7 two_neq_zero
-      rw[h9]
-
-    have hbeven := even_square_means_even b h8
-
-    have twoa : (Int.two.Divides a) := even_means_two_divides a h5
-    have twob : (Int.two.Divides b) := even_means_two_divides b hbeven
-
-    have h9 : (Int.two.Divides (Int.gcd a b )) := common_div_divides_gcd a b .two twoa twob
-
-    rw[h1] at h9
-    have h10 : (Int.two = Int.one) := one_is_unit .two h9
-    have h12 := And.intro h10 int_two_neq_one
-    simp at h12
 
 end MyInt

@@ -2,90 +2,15 @@ import Project1.Nat.Nat
 import Project1.Nat.Arithmetic
 import Project1.Nat.Properties
 
+import Project1.IntReps.IntRep
+
 namespace MyInt
 
-abbrev Nat := MyNat.Nat
-abbrev add_commutes := MyNat.add_commutes
-abbrev add_associates := MyNat.add_associates
-abbrev mul_commutes := MyNat.mul_commutes
+def Int := Quotient intRepSetoid
 
--- want to represent as an equivalence class
--- represents pos - neg
-structure IntRep where
-  pos : Nat
-  neg : Nat
+def intOfRep ( r : IntRep ) : Int := Quotient.mk intRepSetoid r
 
--- since a - b = c - d <=> a + d = c + b
-def IntRep.Equivalent ( x y : IntRep ) : Prop :=
-  x.pos + y.neg = y.pos + x.neg
-
--- Need to prove its an equivalence relation
-theorem equi_refl ( x : IntRep ) : IntRep.Equivalent x x :=
-  by
-    unfold IntRep.Equivalent
-    rfl
-
-theorem equi_symm ( x y : IntRep ) (h1 : x.Equivalent y) :
-  (y.Equivalent x):=
-  by
-    unfold IntRep.Equivalent
-    unfold IntRep.Equivalent at h1
-    exact h1.symm
-
-theorem equi_trans (x y z : IntRep)
-    ( h1 : IntRep.Equivalent x y )
-    ( h2 : IntRep.Equivalent y z ) :
-  (IntRep.Equivalent x z) :=
-  by
-    unfold IntRep.Equivalent
-    unfold IntRep.Equivalent at h1
-    unfold IntRep.Equivalent at h2
-    have h3 := MyNat.add_right_congr (x.pos + y.neg) (y.pos + x.neg) (y.pos + z.neg) h1
-    rw (occs := .pos [3]) [add_commutes] at h3
-    rw (occs := .pos [1]) [<-add_associates] at h3
-    rw (occs := .pos [3]) [add_commutes] at h3
-    rw[add_associates] at h3
-    rw[add_associates] at h3
-    rw (occs := .pos [2]) [<-add_associates] at h3
-    rw[<-add_associates] at h3
-    rw[add_commutes] at h3
-    rw[add_associates] at h3
-    have h4 := MyNat.add_left_cancel (c := y.pos) (y.neg + (x.pos + z.neg)) (x.neg + (y.pos + z.neg)) h3
-    rw[add_commutes] at h4
-    rw[h2] at h4
-    rw (occs := .pos [1]) [<-add_associates] at h4
-    have h5 := MyNat.add_right_cancel (x.pos + z.neg) (x.neg + z.pos) (y.neg) h4
-    rw (occs := .pos [2]) [add_commutes] at h5
-    exact h5
-
-instance intRepSetoid : Setoid IntRep where
-  r := IntRep.Equivalent
-  iseqv := {
-    refl := equi_refl,
-    symm := @equi_symm,
-    trans := @equi_trans,
-  }
-
-def IntRep.add ( x y : IntRep ) : IntRep :=
-  IntRep.mk (x.pos + y.pos) (x.neg + y.neg)
-
-def IntRep.mul ( x y : IntRep ) : IntRep :=
-  IntRep.mk ((x.pos * y.pos) + (x.neg * y.neg)) ((x.pos * y.neg) + (x.neg * y.pos))
-
-def IntRep.negate ( x : IntRep ) : IntRep :=
-  IntRep.mk x.neg x.pos
-
-def Int :=
-  Quotient intRepSetoid
-
-def intOfRep ( r : IntRep ) : Int :=
-  Quotient.mk intRepSetoid r
-
-def intOfNat ( n : Nat ) : Int :=
-  intOfRep (IntRep.mk n .zero )
-
-def Int.lte (a b : Int) : Prop := sorry
-def Int.lt (a b : Int) : Prop := (Int.lte a b) ∧ (a ≠ b)
+def intOfNat ( n : Nat ) : Int := intOfRep (IntRep.mk n .zero )
 
 theorem anegneg_is_apos (a : IntRep) :
   a.negate.neg = a.pos := by rfl
@@ -115,27 +40,6 @@ def Int.negate : Int -> Int :=
       apply Quotient.sound
       exact negate_respects a b h
     )
-
-theorem unfold_intrep_equiv (a b : IntRep) (h1: a ≈ b) :
-  a.Equivalent b :=
-  by
-    simp only [(· ≈ · )] at h1
-    unfold instHasEquivOfSetoid at h1
-    simp at h1
-    simp[Setoid.r] at h1
-    exact h1
-
-theorem unfold_intrep_equiv_congr (a b : IntRep) (h1: a.Equivalent b) :
-  (a ≈ b) :=
-  by
-    simp only [(· ≈ · )]
-    unfold instHasEquivOfSetoid
-    simp
-    simp[Setoid.r]
-    exact h1
-
-theorem IntRep.equiv_def (a b : IntRep ) :
-  a ≈ b ↔ IntRep.Equivalent a b := by rfl
 
 theorem add_respects (a a' b b' : IntRep ) (ha: a ≈ a') (hb: b ≈ b') :
   IntRep.add a b ≈ IntRep.add a' b' :=
@@ -409,9 +313,8 @@ theorem mul_expands ( x y : IntRep) :
   x * y = x.mul y := rfl
 
 theorem inteq_means_zero ( x : IntRep ) :
-  (x.pos = x.neg) ↔ x ≈ zero_int_rep :=
+  (x.pos = x.neg) ↔ x ≈ IntRep.zero :=
   by
-    unfold zero_int_rep
     unfold IntRep.zero
     simp only [(· ≈ ·)]
     unfold instHasEquivOfSetoid
@@ -448,8 +351,6 @@ theorem inverse_nat ( x : Int ) :
       simp
       rw[MyNat.add_zero]
       rw[MyNat.zero_add]
-
-def Int.Positive (a : Int) : Prop := Int.lt a Int.zero
 
 def Int.Divides ( a b : Int ) : Prop :=
   ∃ k : Int, b = a * k
