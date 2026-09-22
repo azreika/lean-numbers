@@ -321,14 +321,46 @@ theorem lte_one_adds (a b : Nat ) (h1 : Nat.lte a b ) :
       change a.succ.lte b
       exact h1
 
+theorem lte_unsucc (a b : Nat) (h1 : Nat.lte a.succ b.succ) :
+  Nat.lte a b :=
+  by
+    change a.succ.lte b.succ
+    exact h1
+
 theorem lte_one_minus (a b : Nat ) (h1 : Nat.lte (a + .one) (b+.one) ) :
   (Nat.lte a b) :=
   by
     rw[<-succ_add_one] at h1
     rw[<-succ_add_one] at h1
-    change a.succ.lte b.succ
-    change a.lte b
+    exact lte_unsucc a b h1
+
+theorem succ_switch (a b : Nat) :
+  (a + b.succ) = (a.succ + b) := by
+    rw[succ_add]
+    rw[add_commutes]
+    rw[<-succ_add]
+    rw[add_commutes]
+
+theorem lte_remove_term_right ( a b c : Nat ) ( h1 : Nat.lte (a + c) (b + c )) :
+  Nat.lte a b :=
+  by
+    induction c generalizing a b with
+    | zero =>
+    rw[add_zero] at h1
+    rw[add_zero] at h1
     exact h1
+    | succ c ih =>
+    rw[succ_switch] at h1
+    rw[succ_switch] at h1
+    have h2 := ih a.succ b.succ h1
+    exact lte_unsucc a b h2
+
+theorem lte_remove_term_left ( a b c : Nat ) ( h1 : Nat.lte (c + a) ( c + b)) :
+  Nat.lte a b :=
+  by
+    rw[add_commutes] at h1
+    rw (occs := .pos [2]) [add_commutes] at h1
+    exact lte_remove_term_right a b c h1
 
 theorem lte_add_term ( a b c : Nat ) (h1 : Nat.lte a b ) :
   Nat.lte (a + c) (b + c) := by
