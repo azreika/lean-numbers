@@ -70,6 +70,9 @@ theorem lt_means_lte (a b : Int) (h1 : a < b ) : (a ≤ b ) := sorry
 theorem not_lt_means_flip_lte ( a b : Int) (h1 : ¬ (a < b)) :
   (b ≤ a) := sorry
 
+theorem not_lte_means_flip_lt ( a b : Int) (h1 : ¬ (a ≤ b)) :
+  (b < a) := sorry
+
 theorem integer_gaps (a b : Int) (h1 : a ≤ b) :
   ∃ (m : Int), (.zero ≤ m) ∧ (b = a + m) := sorry
 

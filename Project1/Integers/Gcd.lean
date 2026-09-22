@@ -193,7 +193,6 @@ theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hb : b ≥ .zero) :
     exact d_divides_b
 
     constructor
-
     intro c
     intro c_divides_a
     intro c_divides_b
@@ -202,35 +201,124 @@ theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hb : b ≥ .zero) :
     obtain ⟨ k_a, hk_a ⟩ := c_divides_a
     obtain ⟨ k_b, hk_b ⟩ := c_divides_b
 
-    have c_gt_zero : (c > .zero) := sorry
-    have hh := euclidean b c hb c_gt_zero
-    obtain ⟨ r, hr ⟩ := hh
-    obtain ⟨ q, hq ⟩ := hr
-    have hq1 := hq.left
-    have hq2 := hq.right.left
-    have hq3 := hq.right.right
-
-    have r_eq_zero : (r = .zero) := by sorry
-    unfold Int.Divides
-    exists q
-    rw[r_eq_zero] at hq1
-    have hh2 : (.zero + d) = (q * c - d) + d := sorry
-    rw[int_zero_add] at hh2
-    rw[sub_is_plus_neg] at hh2
-    rw[int_add_associates] at hh2
-    rw (occs := .pos [2]) [int_add_commutes] at hh2
-    rw[inverse_nat] at hh2
-    rw[int_add_zero] at hh2
-    rw[int_mul_commutes] at hh2
-
-    exact hh2
+    simp only [(· ∈ · )] at d_in_poscom
+    unfold pos_com_set at d_in_poscom
+    unfold PosLinearCombinations at d_in_poscom
+    unfold LinearCombinations at d_in_poscom
+    have d_lin_com := d_in_poscom.left
+    simp only [(· ∈ · )] at d_lin_com
+    obtain ⟨ m, hm ⟩ := d_lin_com
+    obtain ⟨ n, hn ⟩ := hm
+    rw[hk_a] at hn
+    rw[hk_b] at hn
+    have hca : (c.Divides (c * k_a * m)) := sorry
+    have hcb : (c.Divides (c * k_b * n)) := sorry
+    have hcab : (c.Divides ( c * k_a * m + c * k_b * n)) := sorry
+    rw[<-hn] at hcab
+    exact hcab
 
     exact lt_means_lte Int.zero d d_gt_zero
+
+theorem zero_divides_all (a : Int) : (Int.zero.Divides a) := sorry
+
+theorem divides_neg_iff (d a : Int) :
+  (d.Divides a) ↔ (d.Divides a.negate) := sorry
+
+theorem exists_gcd_b0 (a : Int) :
+  ∃ (d : Int), IsGcd a .zero d :=
+  by
+    unfold IsGcd
+    exists .zero
+
+    constructor
+    exact zero_divides_all a
+
+    constructor
+    exact zero_divides_all Int.zero
+
+    constructor
+    intro c
+    intro c_divides_a
+    intro c_divides_zero
+
+    exact c_divides_zero
+
+    rfl
+
+theorem lte_and_nonequal_means_lt (a b : Int) (h1 : a ≤ b) (h2 : a ≠ b)  :
+  (a < b) :=
+  by
+    exact And.intro h1 h2
+
+theorem gcd_symm ( a b d : Int) :
+  (IsGcd a b d ↔ IsGcd b a d) := by
+    sorry
+
+theorem gcd_of_neg_is_gcd ( a b d : Int ) (h1 : IsGcd a b.negate d ) :
+  IsGcd a b d := by
+  unfold IsGcd
+  unfold IsGcd at h1
+  have d_divides_a := h1.left
+  have d_divides_b := h1.right.left
+  have c_divides_all := h1.right.right.left
+  have d_geq_zero := h1.right.right.right
+  constructor
+  exact d_divides_a
+  constructor
+  have hh := divides_neg_iff d b
+  rw[<-hh] at d_divides_b
+  exact d_divides_b
+
+  constructor
+  intro c
+  intro c_divides_a
+  intro c_divides_b
+
+  have hh := divides_neg_iff c b
+  rw[hh] at c_divides_b
+
+  have hcc := c_divides_all c c_divides_a c_divides_b
+  exact hcc
+
+  exact d_geq_zero
 
 theorem exists_gcd (a b : Int):
   ∃ (d : Int), IsGcd a b d :=
   by
+    by_cases hb0 : Int.zero = b
+    rw[<-hb0]
+    exact exists_gcd_b0 a
+
+    by_cases ha0 : Int.zero = a
+    rw[<-ha0]
+    have gcd_flip := exists_gcd_b0 b
+    obtain ⟨ d, hd ⟩ := gcd_flip
+    have hh := gcd_symm Int.zero b d
+    exists d
+    rw[hh]
+    exact hd
+
+    by_cases ha : Int.zero ≤ a
+    by_cases hb : Int.zero ≤ b
+    have hb_gt_zero : (.zero < b) := lte_and_nonequal_means_lt Int.zero b hb hb0
+    exact exists_gcd_pos a b ha hb
+
+    have hh := not_lte_means_flip_lt Int.zero b hb
+    have hh2 : (b.negate > .zero) := sorry
+
+    have hh3 : (∃ (d : Int), IsGcd a (b.negate) d) := sorry
+    obtain ⟨ d, hd ⟩ := hh3
+    exists d
+    apply gcd_of_neg_is_gcd a b d
+    exact hd
+
+    by_cases hb : Int.zero ≤ b
     sorry
+
+    sorry
+
+
+
 
 noncomputable
 def Int.gcd (a b : Int) : Int :=
