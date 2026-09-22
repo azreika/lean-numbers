@@ -15,6 +15,7 @@ def IsGcd (a b d : Int) : Prop :=
 
 theorem exists_gcd (a b : Int) :
   ∃ (d : Int), IsGcd a b d :=
+  by
     sorry
 
 noncomputable
@@ -28,8 +29,57 @@ theorem gcd_is_gcd (a b : Int) :
     unfold Int.gcd
     exact Exists.choose_spec (exists_gcd a b)
 
-theorem one_is_unit (a : Int) (h1: a.Divides .one) : a = .one :=
-  by sorry
+theorem intofnat_eq (a b : Nat) (h1 : intOfNat a = intOfNat b) :
+  (a = b) :=
+  by
+    induction a generalizing b with
+    | zero =>
+        dsimp [intOfNat] at h1
+        have h2 := intofrep_eq (IntRep.mk .zero .zero) (IntRep.mk b .zero) h1
+        simp at h2
+        rw[MyNat.zero_add] at h2
+        rw[MyNat.zero_add] at h2
+        exact h2
+    | succ a ih =>
+        dsimp [intOfNat] at h1
+        have h2 := intofrep_eq (IntRep.mk a.succ .zero) (IntRep.mk b .zero) h1
+        simp at h2
+        rw[MyNat.zero_add] at h2
+        rw[MyNat.add_zero] at h2
+        exact h2
+
+
+theorem two_neq_zero : (Int.two ≠ .zero) :=
+  by
+    intro h1
+    dsimp [Int.two, Int.zero] at h1
+    have h2 := intofnat_eq MyNat.Nat.two MyNat.Nat.zero h1
+    contradiction
+
+theorem one_is_unit (a : Int) (h1: a.Divides .one) (h2: .zero ≤ a) : a = .one :=
+  by
+    dsimp [Int.Divides] at h1
+    obtain ⟨ k, hk ⟩ := h1
+    have hh : (.one ≤ a * k) := by
+      exact eq_means_leq .one (a*k) hk
+    have hh' : (Int.zero ≤ .one ) := zero_leq_one
+    have h3_0 : (.zero ≤ a * k) := by
+      rw[hk] at hh'
+      exact hh'
+    have h3 : (.zero ≤ k) := prod_geq_means_op_geq a k h3_0 h2
+    have h4 : (a ≤ a * k) := geq_zero_means_prod_geq a k h2 h3
+    have h4_1 : (a * k ≠ .zero) := by
+      intro bb
+      rw[bb] at hk
+      have h4_2 : MyNat.Nat.one = MyNat.Nat.zero := intofnat_eq MyNat.Nat.one MyNat.Nat.zero hk
+      contradiction
+    have h5 : (a ≤ .one) := by
+      rw[hk]
+      exact h4
+    have h6 : (a ≠ .zero) := prod_nonzero_means_op_nonzero a k h4_1
+    have h7 : (.one ≤ a) := zero_lt_means_one_lte a h2 h6
+    have h8 : (a = .one ) := lte_antisym a .one h5 h7
+    exact h8
 
 theorem int_two_neq_one : Int.two ≠ Int.one :=
   by
@@ -98,32 +148,6 @@ theorem even_means_two_divides (a : Int ) (h1 : Int.Even a) : Int.two.Divides a 
   by
     unfold Int.Even at h1
     exact h1
-
-theorem intofnat_eq (a b : Nat) (h1 : intOfNat a = intOfNat b) :
-  (a = b) :=
-  by
-    induction a generalizing b with
-    | zero =>
-        dsimp [intOfNat] at h1
-        have h2 := intofrep_eq (IntRep.mk .zero .zero) (IntRep.mk b .zero) h1
-        simp at h2
-        rw[MyNat.zero_add] at h2
-        rw[MyNat.zero_add] at h2
-        exact h2
-    | succ a ih =>
-        dsimp [intOfNat] at h1
-        have h2 := intofrep_eq (IntRep.mk a.succ .zero) (IntRep.mk b .zero) h1
-        simp at h2
-        rw[MyNat.zero_add] at h2
-        rw[MyNat.add_zero] at h2
-        exact h2
-
-theorem two_neq_zero : (Int.two ≠ .zero) :=
-  by
-    intro h1
-    dsimp [Int.two, Int.zero] at h1
-    have h2 := intofnat_eq MyNat.Nat.two MyNat.Nat.zero h1
-    contradiction
 
 theorem root2_irrational_1 :
   (¬ ∃ (a b : Int), (Int.gcd a b = Int.one) ∧ .two * b * b = a * a) :=

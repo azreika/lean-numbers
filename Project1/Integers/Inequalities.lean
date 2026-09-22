@@ -24,4 +24,28 @@ instance : LE IntRep where
 instance : LE Int where
   le := Int.lte
 
+theorem lte_trans ( a b c : Int) (h1 : a ≤ b ) (h2 : b ≤ c) :
+  (a ≤ c) := sorry
+
+theorem prod_geq_means_op_geq (a b : Int) (h1 : .zero ≤ a * b) (h2 : .zero ≤ a) :
+  (.zero ≤ b) := sorry
+
+theorem zero_leq_one : (Int.zero ≤ Int.one) := sorry
+
+theorem eq_means_leq ( a b : Int ) (h1 : a = b) :
+  (a ≤ b ) := sorry
+
+theorem geq_zero_means_prod_geq ( a b : Int ) ( h1 : .zero ≤ a ) (h2 : .zero ≤ b) :
+  (a ≤ a * b) := sorry
+
+theorem lte_antisym ( a b : Int ) (h1 : Int.lte a b ) (h2 : Int.lte b a) :
+  (a = b) := by
+  sorry
+
+theorem zero_lt_means_one_lte ( a : Int ) (h1: .zero ≤ a ) (h2 : a ≠ .zero) :
+  (.one ≤ a) := sorry
+
+theorem prod_nonzero_means_op_nonzero (a b : Int) (h1 : a * b ≠ .zero) :
+  (a ≠ .zero) := sorry
+
 end MyInt
