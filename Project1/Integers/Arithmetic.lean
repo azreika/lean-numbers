@@ -69,7 +69,7 @@ theorem add_right_cancel ( a b c : Int ) (h1 : a + c = b + c) :
   (a = b) := by
     sorry
 
-theorem add_left_cancel ( a b c : Int ) (h1 : a + c = b + c) :
+theorem add_left_cancel ( a b c : Int ) (h1 : c + a = c + b) :
   (a = b) := by
     sorry
 
@@ -739,6 +739,11 @@ theorem int_mul_one ( a : Int ) : a * .one = a := by
       rw[MyNat.mul_one]
       rw[MyNat.zero_add]
 
+
+theorem int_mul_zero (a : Int) : a * .zero = .zero :=
+  by
+    sorry
+
 theorem add_self (a : Int) : (a + a = .two * a):= by
   rw[<-int_mul_one a]
   rw[<-mul_add_distributes]
@@ -796,5 +801,10 @@ theorem negate_to_mul_neg_one ( a : Int) : a.negate = (a * Int.one.negate) := so
 theorem zero_negate : (Int.zero = Int.zero.negate) :=
   by
     sorry
+
+theorem inverse_nat2 (x : Int) : (Int.negate x) + x = .zero :=
+  by
+    rw[int_add_commutes]
+    rw[inverse_nat]
 
 end MyInt

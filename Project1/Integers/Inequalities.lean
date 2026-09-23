@@ -79,4 +79,19 @@ theorem integer_gaps (a b : Int) (h1 : a ≤ b) :
 theorem negate_lte ( a b : Int ) (h1 : a ≤ b) :
   a.negate ≥ b.negate := sorry
 
+
+theorem lt_means_neq ( a b : Int ) (h1: a < b) : a ≠ b := sorry
+
+theorem sum_lte_is_lte (a b c : Int) (h1: a ≥ c) (h2: b ≥ c) :
+  (a + b ≥ c) := sorry
+
+theorem lt_plus_pos_means_lt (a b c: Int) (h1: a ≥ c) (h2 : b > .zero) :
+  a + b > c := sorry
+
+
+theorem negative_zero_lte_from_lt ( a : Int) (h1 : a < .zero) :
+  (a.negate > .zero) :=
+  by
+    sorry
+
 end MyInt

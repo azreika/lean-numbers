@@ -30,4 +30,23 @@ theorem pos_nonempty_has_min (s : Set Int) (h1: is_nonempty s) (h2 : ∀ (x : In
   has_min s :=
     sorry
 
+theorem expand_poscom_set ( x a b : Int ) :
+  (x ∈ PosLinearCombinations a b) ↔ (∃ (m n : Int), x = a * m + b * n) ∧ .zero < x :=
+  by
+    constructor
+
+    intro h1
+    simp only [(· ∈ · )] at h1
+    unfold PosLinearCombinations at h1
+    unfold LinearCombinations at h1
+    simp only [(· ∈ · )] at h1
+    exact h1
+
+    intro h1
+    simp only [(· ∈ · )]
+    unfold PosLinearCombinations
+    unfold LinearCombinations
+    simp only [(· ∈ · )]
+    exact h1
+
 end MyInt

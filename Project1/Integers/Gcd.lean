@@ -2,6 +2,7 @@ import Project1.Integers.Arithmetic
 import Project1.Nat.Properties
 import Project1.Integers.Inequalities
 import Project1.Integers.Sets
+import Project1.Integers.Parity
 
 import Std
 
@@ -124,13 +125,25 @@ theorem euclidean ( a b : Int ) (ha : .zero ≤ a) (hb : .zero < b):
       rw[m_eq_r] at hm2
       have h11 := add_left_congr r (b + r) .zero hm2
       rw (occs := .pos [2]) [int_zero_add] at h11
-      have hh := add_left_cancel Int.zero b r h11
+      have hh := add_right_cancel Int.zero b r h11
       exact hh.symm
     have b_neq_zero : b ≠ .zero := zero_lt_means_neq_zero b hb
     contradiction
 
 theorem gt_zero_plus_gte_zero (a b : Int) (h1: a > .zero) (h2 : b ≥ .zero) :
-  (a + b > .zero) := sorry
+  (a + b  > .zero) :=
+  by
+    simp only [(· > · )]
+    simp only [(· < · )]
+    unfold Int.lt
+    constructor
+
+    have hh := lt_means_lte Int.zero a h1
+    exact sum_lte_is_lte a b Int.zero hh h2
+
+    have hh := lt_plus_pos_means_lt b a Int.zero  h2 h1
+    rw[int_add_commutes] at hh
+    exact lt_means_neq Int.zero (a + b) hh
 
 theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hbz : b > .zero) :
   ∃ (d : Int), IsGcd a b d :=
@@ -176,7 +189,7 @@ theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hbz : b > .zero) :
       unfold PosLinearCombinations at d_in_poscom
       exact d_in_poscom.right
 
-    have d_divides_a : (d.Divides a ) := by
+    have d_divides_a : (d.Divides a) := by
       have hh := euclidean a d ha d_gt_zero
       obtain ⟨ r, hr ⟩ := hh
       obtain ⟨ q, hq ⟩ := hr
@@ -184,13 +197,77 @@ theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hbz : b > .zero) :
       have hq2 := hq.right.left
       have hq3 := hq.right.right
 
-      have r_eq_zero : (r = .zero) := by
-        sorry
+      have ham_d : (∃ (m n : Int ), d = a * m + b * n) := by
+        unfold pos_com_set at d_in_poscom
+        have hh := expand_poscom_set d a b
+        rw[hh] at d_in_poscom
+        exact d_in_poscom.left
+
+      obtain ⟨ m, hm ⟩ := ham_d
+      obtain ⟨ n, hn ⟩ := hm
+
+      have r_eq_zero : (r = .zero) :=
+        by
+          apply Classical.byContradiction
+          intro r_neq_zero
+          have h3 := expand_poscom_set r a b
+          symm at h3
+          have ham_r : (∃ (m n : Int ), r = a * m + b * n) :=
+            by
+              exists (Int.one.negate + q * m)
+              exists (q * n)
+              rw[mul_add_distributes]
+              apply add_right_cancel r (a * Int.one.negate + a * (q*m) + b * (q* n)) a
+              rw[hq1]
+              rw[sub_is_plus_neg]
+              rw[int_add_associates]
+              rw[inverse_nat2]
+              rw[int_add_zero]
+              rw[<-neg_expands_mul]
+              rw[int_mul_one]
+              rw[int_add_commutes]
+              rw[<-int_add_associates]
+              rw[<-int_add_associates]
+              rw[inverse_nat]
+              rw[int_zero_add]
+              rw (occs := .pos [2])[int_mul_commutes]
+              rw (occs := .pos [4])[int_mul_commutes]
+              rw[int_mul_associates]
+              rw[int_mul_associates]
+              rw[<-mul_add_distributes]
+              apply mul_left_congr
+              rw[int_mul_commutes]
+              rw (occs := .pos [2] )[int_mul_commutes]
+              exact hn
+          have r_gt_zero : .zero < r := by
+            have hh := And.intro hq2 r_neq_zero
+            simp only [(· < · )]
+            unfold Int.lt
+            constructor
+            exact hh.left
+            symm
+            exact hh.right
+          have r_in_a : (r ∈ pos_com_set) :=
+            by
+              unfold pos_com_set
+              have hand := And.intro ham_r r_gt_zero
+              rw[h3] at hand
+              exact hand
+          have d_leq_r : (d ≤ r) :=
+            by
+              unfold is_min at hd
+              exact hd.right r r_in_a
+          have d_eq_r : (d = r) :=
+            by
+              have hq4 := lt_means_lte r d hq3
+              exact (lte_antisym r d hq4 d_leq_r).symm
+          have d_neq_r : (d ≠ r) := (lt_means_neq r d hq3).symm
+          contradiction
 
       unfold Int.Divides
       exists q
       rw[r_eq_zero] at hq1
-      have hh2 : (.zero + a) = (q * d - a) + a := sorry
+      have hh2 : (.zero + a) = (q * d - a) + a := add_right_congr Int.zero (q * d - a) a hq1
       rw[int_zero_add] at hh2
       rw[sub_is_plus_neg] at hh2
       rw[int_add_associates] at hh2
@@ -208,11 +285,82 @@ theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hbz : b > .zero) :
       have hq2 := hq.right.left
       have hq3 := hq.right.right
 
-      have r_eq_zero : (r = .zero) := by sorry
+      have ham_d : (∃ (m n : Int ), d = a * m + b * n) := by
+        unfold pos_com_set at d_in_poscom
+        have hh := expand_poscom_set d a b
+        rw[hh] at d_in_poscom
+        exact d_in_poscom.left
+
+      obtain ⟨ m, hm ⟩ := ham_d
+      obtain ⟨ n, hn ⟩ := hm
+
+      have r_eq_zero : (r = .zero) :=
+        by
+          apply Classical.byContradiction
+          intro r_neq_zero
+          have h3 := expand_poscom_set r a b
+          symm at h3
+          have ham_r : (∃ (m n : Int ), r = a * m + b * n) :=
+            by
+              exists (q * m)
+              exists (Int.one.negate + q * n)
+              rw[mul_add_distributes]
+              apply add_right_cancel r (a * (q*m) + (b * Int.one.negate + b * (q* n))) b
+              rw[hq1]
+              rw[sub_is_plus_neg]
+              rw[int_add_associates]
+              rw[inverse_nat2]
+              rw[int_add_zero]
+              rw[<-neg_expands_mul]
+              rw[int_mul_one]
+              rw[int_add_commutes]
+              rw[<-int_add_associates]
+              rw[<-int_add_associates]
+              rw[int_add_commutes]
+              rw[<-int_add_associates]
+              rw(occs := .pos [3]) [int_add_commutes]
+              rw[int_add_associates]
+              rw[int_add_associates]
+              rw[inverse_nat]
+              rw[int_add_zero]
+              rw (occs := .pos [2])[int_mul_commutes]
+              rw (occs := .pos [4])[int_mul_commutes]
+              rw[int_mul_associates]
+              rw[int_mul_associates]
+              rw[<-mul_add_distributes]
+              apply mul_left_congr
+              rw[int_mul_commutes]
+              rw (occs := .pos [2] )[int_mul_commutes]
+              rw[int_add_commutes]
+              exact hn
+          have r_gt_zero : .zero < r := by
+            have hh := And.intro hq2 r_neq_zero
+            simp only [(· < · )]
+            unfold Int.lt
+            constructor
+            exact hh.left
+            symm
+            exact hh.right
+          have r_in_a : (r ∈ pos_com_set) :=
+            by
+              unfold pos_com_set
+              have hand := And.intro ham_r r_gt_zero
+              rw[h3] at hand
+              exact hand
+          have d_leq_r : (d ≤ r) :=
+            by
+              unfold is_min at hd
+              exact hd.right r r_in_a
+          have d_eq_r : (d = r) :=
+            by
+              have hq4 := lt_means_lte r d hq3
+              exact (lte_antisym r d hq4 d_leq_r).symm
+          have d_neq_r : (d ≠ r) := (lt_means_neq r d hq3).symm
+          contradiction
       unfold Int.Divides
       exists q
       rw[r_eq_zero] at hq1
-      have hh2 : (.zero + b) = (q * d - b) + b := sorry
+      have hh2 : (.zero + b) = (q * d - b) + b := add_right_congr Int.zero (q * d - b) b hq1
       rw[int_zero_add] at hh2
       rw[sub_is_plus_neg] at hh2
       rw[int_add_associates] at hh2
@@ -247,17 +395,25 @@ theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hbz : b > .zero) :
     obtain ⟨ n, hn ⟩ := hm
     rw[hk_a] at hn
     rw[hk_b] at hn
-    have hca : (c.Divides (c * k_a * m)) := sorry
-    have hcb : (c.Divides (c * k_b * n)) := sorry
-    have hcab : (c.Divides ( c * k_a * m + c * k_b * n)) := sorry
+    have hca : (c.Divides (c * k_a * m)) := by
+      unfold Int.Divides
+      exists k_a * m
+      rw[int_mul_associates]
+    have hcb : (c.Divides (c * k_b * n)) := by
+      unfold Int.Divides
+      exists k_b * n
+      rw[int_mul_associates]
+    have hcab : (c.Divides ( c * k_a * m + c * k_b * n)) := by
+      unfold Int.Divides
+      exists (k_a * m + k_b * n)
+      rw[mul_add_distributes]
+      rw[int_mul_associates]
+      rw[int_mul_associates]
     rw[<-hn] at hcab
     exact hcab
 
     exact lt_means_lte Int.zero d d_gt_zero
 
-theorem int_mul_zero (a : Int) : a * .zero = .zero :=
-  by
-    sorry
 
 theorem all_divide_zero (a : Int) : (a.Divides Int.zero) :=
   by
@@ -387,12 +543,6 @@ theorem gcd_of_neg_is_gcd_both ( a b d : Int ) (h1 : IsGcd a.negate b.negate d) 
     have h2 := gcd_of_neg_is_gcd a.negate b d h1
     have h3 := gcd_of_neg_is_gcd_1 a b d h2
     exact h3
-
-theorem negative_zero_lte_from_lt ( a : Int) (h1 : a < .zero) :
-  (a.negate > .zero) :=
-  by
-
-    sorry
 
 theorem negative_zero_lte ( a : Int) (h1 : ¬(.zero ≤ a )) :
   (a.negate > .zero) :=
@@ -582,35 +732,6 @@ theorem int_two_neq_one : Int.two ≠ Int.one :=
     have bad : False := h3.symm h2
     exact bad
 
-theorem even_or_odd (a : Int) : (Int.Even a ∨ Int.Odd a) :=
-  by
-    sorry
-
-theorem not_even_means_odd (a : Int ) (h1 : ¬ Int.Even a) : Int.Odd a :=
-  by
-    have h2 := even_or_odd a
-    have h3 := Or.elim h2 h1
-    simp at h3
-    exact h3
-
-theorem even_means_not_odd (a : Int) : (Int.Even a) →  (¬ Int.Odd a ) :=
-  by
-    sorry
-
-theorem even_square_means_even (a : Int) (h1 : Int.Even (a*a)) : (Int.Even a) :=
-  by
-    apply Classical.byContradiction
-    intro h0
-    have h2 := not_even_means_odd a h0
-    have h3 := odd_squared_is_odd a h2
-    have h4 := even_means_not_odd (a * a) h1
-    contradiction
-
-theorem even_is_mult_of_two (a : Int) (h1 : Int.Even a) : (∃ (k : Int), a = .two * k) :=
-  by
-    unfold Int.Even at h1
-    unfold Int.Divides at h1
-    exact h1
 
 theorem common_div_divides_gcd ( a b d : Int )
   (h1:  d.Divides a)
@@ -621,11 +742,6 @@ theorem common_div_divides_gcd ( a b d : Int )
     unfold IsGcd at hg
     have h3 := hg.right.right.left d h1 h2
     exact h3
-
-theorem even_means_two_divides (a : Int ) (h1 : Int.Even a) : Int.two.Divides a :=
-  by
-    unfold Int.Even at h1
-    exact h1
 
 theorem root2_irrational_1 :
   (¬ ∃ (a b : Int), (Int.gcd a b = Int.one) ∧ .two * b * b = a * a) :=

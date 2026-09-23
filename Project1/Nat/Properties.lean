@@ -83,24 +83,6 @@ theorem eq_or_not ( a b : Nat ) :
   by
     exact Classical.em (a = b)
 
-theorem odd_or_even (n : Nat) :
-  Nat.Odd n ∨ Nat.Even n := by
-  induction n with
-  | zero =>
-    right
-    unfold Nat.Even
-    apply divides_zero
-  | succ n ih =>
-    cases ih with
-    | inl hOdd =>
-      right
-      apply odd_succ_is_even
-      apply hOdd
-    | inr hEven =>
-      left
-      apply even_succ_is_odd
-      apply hEven
-
 noncomputable
 def Nat.half (a : Nat) (h : Nat.Even a) : Nat :=
   by
@@ -690,11 +672,5 @@ theorem odd_squared ( n : Nat ) ( h1 : Nat.Odd n ) :
   rw[mul_add_distributes]
   rw[mul_add_distributes]
   rw[mul_one]
-
--- def Rational (x: ℝ) := ∃ (p q : Nat), x = p/q
-
--- def Irrational (x: ℝ) := x ∉ Rational
-
--- we want to eventually prove that root 2 is irrational
 
 end MyNat
