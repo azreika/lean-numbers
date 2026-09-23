@@ -316,6 +316,23 @@ theorem mul_mk ( x y : IntRep ) :
     unfold IntRep.mul
     rfl
 
+theorem mul_mk_nat ( x y : Nat ) :
+  intOfNat (x * y) = ((intOfNat x) * (intOfNat y)):=
+  by
+    unfold intOfNat
+    apply Quotient.sound
+    simp only [(· * ·)]
+    unfold IntRep.mul
+    unfold Mul.mul
+    unfold MyNat.instMulNat
+    simp
+    rw[MyNat.mul_zero]
+    rw[MyNat.add_zero]
+    rw[MyNat.mul_zero]
+    rw[MyNat.zero_add]
+    rw[MyNat.zero_mul]
+    rfl
+
 theorem mul_expands ( x y : IntRep) :
   x * y = x.mul y := rfl
 

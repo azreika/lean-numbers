@@ -88,10 +88,90 @@ theorem sum_lte_is_lte (a b c : Int) (h1: a ≥ c) (h2: b ≥ c) :
 theorem lt_plus_pos_means_lt (a b c: Int) (h1: a ≥ c) (h2 : b > .zero) :
   a + b > c := sorry
 
+theorem lte_add_right (a b c : Int) ( h1 : a ≥ b ) : a + c ≥ b + c :=
+  by
+    sorry
 
 theorem negative_zero_lte_from_lt ( a : Int) (h1 : a < .zero) :
   (a.negate > .zero) :=
   by
     sorry
+
+theorem int_succ_one (a : Nat) :
+  intOfNat (a.succ) = (intOfNat a) + .one :=
+  by
+    dsimp [Int.one]
+    dsimp [intOfNat]
+    dsimp [intOfRep]
+    apply Quotient.sound
+    apply unfold_intrep_equiv_congr
+    dsimp [IntRep.Equivalent]
+    dsimp [IntRep.add]
+    rw[MyNat.add_zero]
+    rw[MyNat.add_zero]
+    rw[MyNat.add_zero]
+    rw[MyNat.add_one]
+    rw[MyNat.add_commutes]
+
+theorem int_nat_succ (a : Nat) (b : Int) (h1 : b = intOfNat a) :
+  (b + .one = intOfNat (a.succ)) :=
+  by
+    induction a generalizing b with
+    | zero =>
+    rw[<-Int.zero] at h1
+    rw[h1]
+    rw[int_zero_add]
+    rfl
+    | succ a ih =>
+    rw[int_succ_one]
+    rw[int_succ_one]
+    apply add_right_congr
+    apply add_right_cancel (c := Int.one.negate)
+    rw[int_add_associates]
+    rw[inverse_nat]
+    rw[int_add_zero]
+    rw[int_succ_one] at h1
+    have h2 := add_right_congr b (intOfNat a + Int.one) Int.one.negate h1
+    rw[h2]
+    rw[int_add_associates]
+    rw[inverse_nat]
+    rw[int_add_zero]
+
+theorem intrep_apos ( a b c d : Nat) (h1 : (IntRep.mk a b) ≤ (IntRep.mk c d) ) :
+  MyNat.Nat.lte (a + d) (c + b) := by exact h1
+
+theorem intofrep_apos (a b c d : Nat ) (h1 : intOfRep (IntRep.mk a b) ≤ intOfRep (IntRep.mk c d)) :
+  MyNat.Nat.lte (a  +d ) (c + b) := by exact h1
+
+theorem nonneg_is_nat (a : Int):
+  (a ≥ .zero) → (∃ (k : Nat), (a = intOfNat k) ):=
+  by
+    dsimp [intOfNat]
+    refine Quotient.inductionOn a ?_
+    intro x
+    dsimp [intOfRep]
+    intro h1
+    cases x with
+    | mk apos aneg  =>
+    have hpos : (MyNat.Nat.lte aneg apos) := by
+      simp only [( · ≥ · )] at h1
+      simp only [( · ≤  · )] at h1
+      rw[<-intOfRep] at h1
+      rw[Int.zero] at h1
+      rw[intof_nat_to_rep] at h1
+      have hx := intofrep_apos .zero .zero apos aneg h1
+      rw[MyNat.zero_add] at hx
+      rw[MyNat.add_zero] at hx
+      exact hx
+    have h2 := MyNat.natural_gap aneg apos hpos
+    obtain ⟨ m, hm ⟩ := h2
+    exists m
+    apply Quotient.sound
+    apply unfold_intrep_equiv_congr
+    dsimp[IntRep.Equivalent]
+    rw[MyNat.add_zero]
+    have hm2 := hm.symm
+    rw[add_commutes] at hm2
+    exact hm2
 
 end MyInt
