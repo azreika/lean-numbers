@@ -65,14 +65,6 @@ theorem intrep_add_right_congr ( a b c : IntRep ) ( h1 : a = b ) :
   by
     rw[h1]
 
-theorem add_right_cancel ( a b c : Int ) (h1 : a + c = b + c) :
-  (a = b) := by
-    sorry
-
-theorem add_left_cancel ( a b c : Int ) (h1 : c + a = c + b) :
-  (a = b) := by
-    sorry
-
 
 theorem add_left_congr ( a b c : Int ) ( h1 : a = b ) :
   (c + a = c + b) :=
@@ -253,14 +245,52 @@ theorem double_negate ( a : Int ) : a.negate.negate = a :=
     unfold IntRep.negate
     simp
 
+theorem intrep_flip (apos aneg bpos bneg : Nat) :
+  (intOfRep (IntRep.mk apos aneg)) = (intOfRep (IntRep.mk bpos bneg)) →
+    (intOfRep (IntRep.mk aneg apos)) = (intOfRep (IntRep.mk bneg bpos) ) :=
+  by
+    intro h1
+    have h2 := intofrep_eq (IntRep.mk apos aneg) (IntRep.mk bpos bneg) h1
+    simp at h2
+    have h3 := intofrep_eq_rev (IntRep.mk aneg apos) (IntRep.mk bneg bpos)
+    simp at h3
+    rw[add_commutes] at h2
+    have h4 := h3 h2.symm
+    exact h4
+
 theorem drop_negate ( a b : Int ) :
   (a.negate = b.negate) ↔ a = b :=
   by
-    sorry
-    -- have h2 := add_negate a.negate b.negate h1
-    -- rw[double_negate] at h2
-    -- rw[double_negate] at h2
-    -- exact h2
+    constructor
+    refine Quotient.inductionOn₂ a b ?_
+    intro a b
+    rw[<-intOfRep]
+    rw[<-intOfRep]
+    cases a with
+    | mk apos aneg =>
+      cases b with
+      | mk bpos bneg =>
+        rw[<-negate_mk]
+        rw[<-negate_mk]
+        dsimp[IntRep.negate]
+        intro h1
+        have h2 := intrep_flip aneg apos bneg bpos h1
+        exact h2
+
+    refine Quotient.inductionOn₂ a b ?_
+    intro a b
+    rw[<-intOfRep]
+    rw[<-intOfRep]
+    cases a with
+    | mk apos aneg =>
+      cases b with
+      | mk bpos bneg =>
+        rw[<-negate_mk]
+        rw[<-negate_mk]
+        dsimp[IntRep.negate]
+        intro h1
+        have h2 := intrep_flip apos aneg bpos bneg h1
+        exact h2
 
 theorem divides_neg ( p m : Int ) (h1 : p.Divides m ):
   (p.Divides m.negate) :=
@@ -578,24 +608,6 @@ theorem intrep_mul_to_zero ( a b : IntRep ) (h1 : a * b ≈ .zero) :
 
 theorem zero_to_intofrep_zero : (intOfRep .zero = Int.zero) := rfl
 
-theorem intofrep_eq_means_equiv ( a b : IntRep ) (h1: intOfRep a = intOfRep b):
-  (a ≈ b) := by exact Quotient.exact h1
-
-theorem intofrep_eq ( a b : IntRep ) :
-  (intOfRep a = intOfRep b) →  (a.pos + b.neg = a.neg + b.pos) :=
-  by
-    cases a with
-    | mk apos aneg =>
-      cases b with
-      | mk bpos bneg =>
-        simp
-        intro h1
-        have h2 := intofrep_eq_means_equiv (IntRep.mk apos aneg) (IntRep.mk bpos bneg) h1
-        rw[IntRep.equiv_def] at h2
-        dsimp[IntRep.Equivalent] at h2
-        rw (occs := .pos [2]) [MyNat.add_commutes] at h2
-        exact h2
-
 theorem intrep_equi_zero ( a : IntRep ) (h1 : intOfRep a = .zero) :
   a ≈ .zero :=
   by
@@ -739,10 +751,18 @@ theorem int_mul_one ( a : Int ) : a * .one = a := by
       rw[MyNat.mul_one]
       rw[MyNat.zero_add]
 
-
 theorem int_mul_zero (a : Int) : a * .zero = .zero :=
   by
-    sorry
+    simp only [(· * · )]
+    dsimp [Mul.mul]
+    refine Quotient.inductionOn a ?_
+    intro x
+    apply Quotient.sound
+    apply unfold_intrep_equiv_congr
+    dsimp [IntRep.Equivalent]
+    rw[MyNat.add_zero]
+    rw[MyNat.zero_add]
+    dsimp [IntRep.mul]
 
 theorem add_self (a : Int) : (a + a = .two * a):= by
   rw[<-int_mul_one a]
@@ -794,17 +814,39 @@ theorem odd_squared_is_odd (n : Int) (h1 : Int.Odd n) : (Int.Odd (n * n)) :=
     rw[int_mul_associates]
     rw[rearrange_22k]
 
-theorem sub_is_plus_neg (a b : Int) : (a - b = a + (b.negate)) := sorry
+theorem sub_is_plus_neg (a b : Int) : (a - b = a + (b.negate)) :=
+  by
+    simp only [(· - · )]
+    dsimp [Sub.sub, Int.subtract]
 
-theorem negate_to_mul_neg_one ( a : Int) : a.negate = (a * Int.one.negate) := sorry
+theorem negate_to_mul_neg_one ( a : Int) : a.negate = (a * Int.one.negate) :=
+  by
+    rw[<-neg_expands_mul]
+    rw[int_mul_one]
 
 theorem zero_negate : (Int.zero = Int.zero.negate) :=
   by
-    sorry
+    dsimp [Int.zero, intOfNat, intOfRep]
+    apply Quotient.sound
+    apply unfold_intrep_equiv_congr
+    dsimp [IntRep.Equivalent]
+    rw[MyNat.zero_add]
+    rw[MyNat.add_zero]
+    dsimp[IntRep.negate]
 
 theorem inverse_nat2 (x : Int) : (Int.negate x) + x = .zero :=
   by
     rw[int_add_commutes]
     rw[inverse_nat]
+
+theorem add_right_cancel ( a b c : Int ) (h1 : a + c = b + c) :
+  (a = b) := by
+    sorry
+
+theorem add_left_cancel ( a b c : Int ) (h1 : c + a = c + b) :
+  (a = b) := by
+    rw[int_add_commutes] at h1
+    rw (occs := .pos [2]) [int_add_commutes] at h1
+    exact add_right_cancel a b c h1
 
 end MyInt

@@ -389,4 +389,48 @@ def Int.Odd ( n : Int ) : Prop :=
   ∃ k : Int, n = two * k + one
 
 
+
+theorem intofrep_eq_means_equiv ( a b : IntRep ) (h1: intOfRep a = intOfRep b):
+  (a ≈ b) := by exact Quotient.exact h1
+
+theorem intrep_eq ( a b : IntRep ) :
+  (intOfRep a = intOfRep b) →  (a.pos + b.neg = a.neg + b.pos) :=
+  by
+    cases a with
+    | mk apos aneg =>
+      cases b with
+      | mk bpos bneg =>
+        simp
+        intro h1
+        have h2 := intofrep_eq_means_equiv (IntRep.mk apos aneg) (IntRep.mk bpos bneg) h1
+        rw[IntRep.equiv_def] at h2
+        dsimp[IntRep.Equivalent] at h2
+        rw (occs := .pos [2]) [MyNat.add_commutes] at h2
+        exact h2
+
+theorem intofrep_eq ( a b : IntRep ) :
+(intOfRep a = intOfRep b) →  (a.pos + b.neg = a.neg + b.pos) :=
+by
+  cases a with
+  | mk apos aneg =>
+    cases b with
+    | mk bpos bneg =>
+      simp
+      intro h1
+      have h2 := intofrep_eq_means_equiv (IntRep.mk apos aneg) (IntRep.mk bpos bneg) h1
+      rw[IntRep.equiv_def] at h2
+      dsimp[IntRep.Equivalent] at h2
+      rw (occs := .pos [2]) [MyNat.add_commutes] at h2
+      exact h2
+
+theorem intofrep_eq_rev ( a b : IntRep ) :
+  (a.pos + b.neg = b.pos + a.neg) → (intOfRep a = intOfRep b) :=
+  by
+    intro h1
+    dsimp [intOfRep]
+    apply Quotient.sound
+    apply unfold_intrep_equiv_congr
+    dsimp [IntRep.Equivalent]
+    exact h1
+
 end MyInt
