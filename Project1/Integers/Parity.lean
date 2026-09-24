@@ -3,6 +3,7 @@ import Project1.Integers.Arithmetic
 
 namespace MyInt
 
+
 theorem even_or_odd_nat ( a : Nat ) : (MyNat.Nat.Even a ∨  MyNat.Nat.Odd a) :=
   by
     induction a with
@@ -40,14 +41,6 @@ theorem even_or_odd_nat ( a : Nat ) : (MyNat.Nat.Even a ∨  MyNat.Nat.Odd a) :=
       rw[<-MyNat.add_associates]
       apply MyNat.add_right_congr
       exact hk
-
-theorem intofnat_eq_means_equal (a b : Nat) (h1 : intOfNat a = intOfNat b )  : (a = b ):=
-  by
-    induction a generalizing b with
-    | zero =>
-    sorry
-    | succ a ih =>
-    sorry
 
 theorem eq_means_intofnat_eq ( a b : Nat ) ( h1 : a = b ) : (intOfNat a = intOfNat b) :=
   by
@@ -94,7 +87,7 @@ theorem parity_iff_nat (a : Nat) : Int.Even (intOfNat a) ↔ MyNat.Nat.Even a :=
         have h2 := intofnat_geq_zero a
         rw[hk] at h2
         exact h2
-      have h3 := prod_geq_means_op_geq Int.two k hk_zero zero_leq_two
+      have h3 := prod_geq_means_op_geq Int.two k hk_zero zero_leq_two two_neq_zero
       exact h3
     have exists_nat := nonneg_is_nat k hk_geq
     obtain ⟨ m, hm ⟩ := exists_nat
@@ -102,7 +95,7 @@ theorem parity_iff_nat (a : Nat) : Int.Even (intOfNat a) ↔ MyNat.Nat.Even a :=
     rw[Int.two] at hk
     rw[hm] at hk
     rw[<-mul_mk_nat] at hk
-    have hk2 := intofnat_eq_means_equal a (MyNat.Nat.two * m) hk
+    have hk2 := intofnat_eq a (MyNat.Nat.two * m) hk
     exact hk2
 
     intro h1

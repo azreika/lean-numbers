@@ -648,35 +648,10 @@ theorem gcd_is_gcd (a b : Int) :
     unfold Int.gcd
     exact Exists.choose_spec (exists_gcd a b)
 
-theorem intofnat_eq (a b : Nat) (h1 : intOfNat a = intOfNat b) :
-  (a = b) :=
+theorem one_is_unit (a : Int) (h1: a.Divides .one) (h2x: .zero < a) : a = .one :=
   by
-    induction a generalizing b with
-    | zero =>
-        dsimp [intOfNat] at h1
-        have h2 := intofrep_eq (IntRep.mk .zero .zero) (IntRep.mk b .zero) h1
-        simp at h2
-        rw[MyNat.zero_add] at h2
-        rw[MyNat.zero_add] at h2
-        exact h2
-    | succ a ih =>
-        dsimp [intOfNat] at h1
-        have h2 := intofrep_eq (IntRep.mk a.succ .zero) (IntRep.mk b .zero) h1
-        simp at h2
-        rw[MyNat.zero_add] at h2
-        rw[MyNat.add_zero] at h2
-        exact h2
-
-
-theorem two_neq_zero : (Int.two ≠ .zero) :=
-  by
-    intro h1
-    dsimp [Int.two, Int.zero] at h1
-    have h2 := intofnat_eq MyNat.Nat.two MyNat.Nat.zero h1
-    contradiction
-
-theorem one_is_unit (a : Int) (h1: a.Divides .one) (h2: .zero ≤ a) : a = .one :=
-  by
+    have h2 := lt_means_lte .zero a h2x
+    have a_neq_zero : (a ≠ .zero) := sorry
     dsimp [Int.Divides] at h1
     obtain ⟨ k, hk ⟩ := h1
     have hh : (.one ≤ a * k) := by
@@ -685,7 +660,7 @@ theorem one_is_unit (a : Int) (h1: a.Divides .one) (h2: .zero ≤ a) : a = .one 
     have h3_0 : (.zero ≤ a * k) := by
       rw[hk] at hh'
       exact hh'
-    have h3 : (.zero ≤ k) := prod_geq_means_op_geq a k h3_0 h2
+    have h3 : (.zero ≤ k) := prod_geq_means_op_geq a k h3_0 h2 a_neq_zero
     have h4 : (a ≤ a * k) := geq_zero_means_prod_geq a k h2 h3
     have h4_1 : (a * k ≠ .zero) := by
       intro bb
@@ -793,7 +768,7 @@ theorem root2_irrational_1 :
     have h9 : (Int.two.Divides (Int.gcd a b )) := common_div_divides_gcd a b .two twoa twob
 
     rw[h1] at h9
-    have h10 : (Int.two = Int.one) := one_is_unit .two h9 zero_leq_two
+    have h10 : (Int.two = Int.one) := one_is_unit .two h9 zero_lt_two
     have h12 := And.intro h10 int_two_neq_one
     simp at h12
 

@@ -360,6 +360,7 @@ theorem lte_add_term ( a b c : Nat ) (h1 : Nat.lte a b ) :
       have h2 : (Nat.lte ((a + c) + .one) ((b + c) + .one)) := lte_one_adds (a+c) (b+c) ih
       exact h2
 
+
 theorem lte_cancel_right ( a b c : Nat ) (h1 : Nat.lte (a + c) (b +c) ) :
     Nat.lte a b := by
     induction c generalizing a b with
@@ -374,6 +375,12 @@ theorem lte_cancel_right ( a b c : Nat ) (h1 : Nat.lte (a + c) (b +c) ) :
       have h2 := lte_one_minus (a + c) (b+c) h1
       have h3 := ih a b h2
       exact h3
+
+theorem lte_cancel_left ( a b c : Nat ) (h1 : Nat.lte (c + a ) (c + b) ) :
+    Nat.lte a b := by
+    rw[add_commutes] at h1
+    rw (occs := .pos [2]) [add_commutes] at h1
+    exact lte_cancel_right a b c h1
 
 theorem lt_means_neq ( a b : Nat ) ( h1: Nat.lt a b ) :
   (a ≠ b) :=
@@ -672,5 +679,16 @@ theorem odd_squared ( n : Nat ) ( h1 : Nat.Odd n ) :
   rw[mul_add_distributes]
   rw[mul_add_distributes]
   rw[mul_one]
+
+theorem add_ltes (a b c d : Nat) (h1 : a ≤ b) (h2 : c ≤ d) :
+  (a + c ≤ b + d ) :=
+  by
+    have h3 : (a + c ≤ b + c) := lte_add_term a b c h1
+    have hpre : (c + b ≤ d + b) := lte_add_term c d b h2
+    have h4 : (b + c ≤ b + d) := by
+      rw [add_commutes] at hpre
+      rw (occs := .pos [2]) [add_commutes] at hpre
+      exact hpre
+    exact lte_trans (a+c) (b+c) (b+d) h3 h4
 
 end MyNat
