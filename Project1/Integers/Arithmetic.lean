@@ -841,7 +841,13 @@ theorem inverse_nat2 (x : Int) : (Int.negate x) + x = .zero :=
 
 theorem add_right_cancel ( a b c : Int ) (h1 : a + c = b + c) :
   (a = b) := by
-    sorry
+    have h2 := add_right_congr (a+c) (b+c) c.negate  h1
+    rw[int_add_associates] at h2
+    rw[int_add_associates] at h2
+    rw[inverse_nat] at h2
+    rw[int_add_zero] at h2
+    rw[int_add_zero] at h2
+    exact h2
 
 theorem add_left_cancel ( a b c : Int ) (h1 : c + a = c + b) :
   (a = b) := by

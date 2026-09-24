@@ -30,8 +30,71 @@ def Int.lt (a b : Int) : Prop :=
 instance : LT Int where
   lt := Int.lt
 
+theorem lte_symbol (a b : Int ) (h1 : a ≤ b) : (a.lte b) :=
+  by exact h1
+
+theorem lte_symbol_rev (a b : Int ) (h1 : a.lte b) : (a ≤ b) :=
+  by exact h1
+
+
+theorem intofrep_leq ( a b : IntRep ) :
+(intOfRep a ≤  intOfRep b) →  (a.pos + b.neg ≤  a.neg + b.pos) :=
+by
+  cases a with
+  | mk apos aneg =>
+    cases b with
+    | mk bpos bneg =>
+      simp
+      intro h1
+      sorry
+
+theorem intofrep_leq_rev ( a b : IntRep ) :
+  (a.pos + b.neg ≤  b.pos + a.neg) → (intOfRep a ≤  intOfRep b) :=
+  by
+    intro h1
+    dsimp [intOfRep]
+    sorry
+
+theorem exists_intofrep ( a : Int ) : ∃ ( k : IntRep ), a = intOfRep k :=
+  sorry
+
+theorem intofrep_lte_trans ( a b c : IntRep ) :
+  ((intOfRep a) ≤ (intOfRep b)) → ((intOfRep b) ≤ (intOfRep c)) → ((intOfRep a) ≤ (intOfRep c)) :=
+  by
+    cases a with
+    | mk apos aneg =>
+    cases b with
+    | mk bpos bneg =>
+    cases c with
+    | mk cpos cneg =>
+    intro h1
+    intro h2
+    have h3 := intofrep_leq (IntRep.mk bpos bneg) (IntRep.mk cpos cneg) h2
+    simp at h3
+    have h4 := intofrep_leq (IntRep.mk apos aneg) (IntRep.mk bpos bneg) h1
+    simp at h4
+
+    apply intofrep_leq_rev
+    simp
+
+    sorry
+
 theorem lte_trans ( a b c : Int) (h1 : a ≤ b ) (h2 : b ≤ c) :
-  (a ≤ c) := sorry
+  (a ≤ c) :=
+  by
+    have h3 := exists_intofrep a
+    obtain ⟨x, hx⟩ := h3
+    have h4 := exists_intofrep b
+    obtain ⟨ y, hy ⟩ := h4
+    have h5 := exists_intofrep c
+    obtain ⟨ z, hz ⟩ := h5
+    rw[hx]
+    rw[hz]
+    rw[hz] at h2
+    rw[hx] at h1
+    rw[hy] at h2
+    rw[hy] at h1
+    exact intofrep_lte_trans x y z h1 h2
 
 theorem prod_geq_means_op_geq (a b : Int) (h1 : .zero ≤ a * b) (h2 : .zero ≤ a) :
   (.zero ≤ b) := sorry
@@ -40,7 +103,9 @@ theorem zero_leq_one : (Int.zero ≤ Int.one) := sorry
 theorem zero_leq_two : (Int.zero ≤ Int.two) := sorry
 
 theorem eq_means_leq ( a b : Int ) (h1 : a = b) :
-  (a ≤ b ) := sorry
+  (a ≤ b ) :=
+  by
+    sorry
 
 theorem geq_zero_means_prod_geq ( a b : Int ) ( h1 : .zero ≤ a ) (h2 : .zero ≤ b) :
   (a ≤ a * b) := sorry
@@ -78,7 +143,6 @@ theorem integer_gaps (a b : Int) (h1 : a ≤ b) :
 
 theorem negate_lte ( a b : Int ) (h1 : a ≤ b) :
   a.negate ≥ b.negate := sorry
-
 
 theorem lt_means_neq ( a b : Int ) (h1: a < b) : a ≠ b := sorry
 

@@ -18,6 +18,9 @@ theorem one_mul(a : Nat):
     rw[ih]
     rw[add_one]
 
+instance : LE Nat where
+  le := Nat.lte
+
 theorem zero_is_min ( a : Nat ) (h1 : Nat.lte a .zero ) :
   (a = .zero) :=
   by
