@@ -308,9 +308,89 @@ theorem nonneg_is_nat (a : Int):
     exact hm2
 
 theorem intofnat_means_geq_zero (a : Int) (b : Nat) (h1: a = intOfNat b) :
-  a ≥ .zero := sorry
+  a ≥ .zero :=
+  by
+    rw[h1]
+    rfl
 
-theorem intofnat_div_means_div ( a b : Nat ) (h1: (intOfNat a).Divides (intOfNat b)) :
+theorem lte_add_rhs (a b : Nat) :
+  (a ≤ a + b) :=
+  by
+    have h1 : (a ≤ a) := MyNat.leq_itself a
+    have h2 : (.zero ≤ a) := rfl
+    have h3 := MyNat.lte_add_term MyNat.Nat.zero b a h2
+    rw[MyNat.zero_add] at h3
+    rw[MyNat.add_commutes] at h3
+    exact h3
+
+theorem lte_div_left (a b c : Nat) ( h1 : a ≤ b ) :
+  (c * a ≤ c * b) :=
+  by
+    induction c generalizing a b with
+    | zero =>
+    rw[MyNat.zero_mul]
+    rw[MyNat.zero_mul]
+    rfl
+    | succ c ih =>
+    rw[MyNat.add_one]
+    rw[MyNat.mul_commutes]
+    rw (occs := .pos [2]) [MyNat.mul_commutes]
+    rw[MyNat.mul_add_distributes]
+    rw[MyNat.mul_add_distributes]
+    rw[MyNat.mul_one]
+    rw[MyNat.mul_one]
+    have h2 := ih a b h1
+    have h3 : (a + c * a ≤ a + c * b) :=
+      by
+        have h4 := MyNat.lte_add_term (c*a) (c*b) a h2
+        rw[MyNat.add_commutes]
+        rw (occs := .pos [2]) [MyNat.add_commutes]
+        exact h4
+    have h4 : (c * a ≤ a + c * a) := by
+      have h5 := MyNat.lte_add_term .zero a (c*a) rfl
+      rw[MyNat.zero_add] at h5
+      exact h5
+    have h5 : (a + c * a ≤ b + c * a) := MyNat.lte_add_term a b (c*a) h1
+    rw[MyNat.mul_commutes]
+    rw (occs := .pos [2]) [MyNat.mul_commutes]
+    have h5' : (b + c * a ≤ b + c * b) :=
+      by
+        have h6 := MyNat.lte_add_term (c*a) (c*b) b h2
+        rw[MyNat.add_commutes] at h6
+        rw (occs := .pos [2]) [MyNat.add_commutes] at h6
+        exact h6
+    have h6 : (a + c * a ≤ b + c * b) := MyNat.lte_trans (a + c * a) (b + c * a) (b + c * b) h5 h5'
+    exact h6
+
+theorem lte_mul_left (a b c : Nat) (h1 : c * a ≤ c * b) (h2 : c ≠ .zero):
+  (a ≤ b) :=
+  by
+    induction a generalizing b c with
+    | zero =>
+    rfl
+    | succ a ih =>
+    have h3 := lte_add_rhs a .one
+    rw[MyNat.add_commutes] at h3
+    rw[<-MyNat.add_one] at h3
+    have h4 := lte_div_left a a.succ c h3
+    have h5 := MyNat.lte_trans (c*a) (c*a.succ) (c*b) h4 h1
+    have ih2 := ih b c h5 h2
+    by_cases hx : (a = b)
+    rw[hx] at h1
+    rw[MyNat.add_one] at h1
+    rw[MyNat.mul_add_distributes] at h1
+    rw[MyNat.mul_one] at h1
+    have h6 := MyNat.add_is_more (c*b) c
+    rw[MyNat.add_commutes] at h6
+    have h7 := MyNat.lte_antisym (c * b) (c + c*b) h6 h1
+    have h8 := MyNat.nat_cancel_to_zero (c*b) c h7
+    contradiction
+
+    have hx2 : (a.lt b) := MyNat.lte_and_neq_means_lt a b ih2 hx
+    have hx3 := MyNat.lt_means_succ_lte a b hx2
+    exact hx3
+
+theorem intofnat_div_means_div ( a b : Nat ) (h1: (intOfNat a).Divides (intOfNat b)) (h2 : a ≠ .zero) :
   (a.Divides b) := by
     unfold MyNat.Nat.Divides
     unfold Int.Divides at h1
@@ -334,9 +414,19 @@ theorem intofnat_div_means_div ( a b : Nat ) (h1: (intOfNat a).Divides (intOfNat
     rw[MyNat.zero_add] at hk2
     have hh0 : ((a*mneg) ≤ (a*mpos)) :=
       by
-        sorry
+        have hk3 := intofrep_eq (IntRep.mk b MyNat.Nat.zero) (IntRep.mk (a*mpos) (a*mneg)) hk
+        have xx1 : (a*mneg ≤ b + a*mneg) := by
+          have yy1 : (.zero ≤ b) := rfl
+          have yy2 := MyNat.lte_add_term (MyNat.Nat.zero) b (a*mneg) yy1
+          rw[MyNat.zero_add] at yy2
+          exact yy2
+        have xx2 := MyNat.eq_means_leq (b + a *mneg) (a*mpos) hk2
+        have xx3 := MyNat.lte_trans (a*mneg ) (b+a*mneg ) (a*mpos) xx1 xx2
+        exact xx3
     have hh : (mneg ≤ mpos) := by
-      sorry
+      apply lte_mul_left (c:=a)
+      exact hh0
+      exact h2
     have hk3 := MyNat.natural_gap (mneg) (mpos) hh
     obtain ⟨r,hr⟩ := hk3
     rw[<-hr] at hk2
@@ -350,6 +440,14 @@ theorem nat_eq_means_intofnat_eq ( a b : Nat ) ( h1 : a = b ) :
   (intOfNat a = intOfNat b) := by
     rw[h1]
 
+theorem intof_nat_neq_zero_means_neq (x : Nat) (h1 : intOfNat x ≠ .zero) :
+  (x ≠ .zero) :=
+  by
+    intro x_eq_zero
+    have h2 := nat_eq_means_intofnat_eq x .zero x_eq_zero
+    rw[<-Int.zero] at h2
+    contradiction
+
 theorem prod_geq_means_op_geq (a b : Int) (h1 : .zero ≤ a * b) (h2 : .zero ≤ a) (h3 : a ≠ .zero):
   (.zero ≤ b) :=
   by
@@ -362,7 +460,10 @@ theorem prod_geq_means_op_geq (a b : Int) (h1 : .zero ≤ a * b) (h2 : .zero ≤
       unfold Int.Divides
       exists b
       exact hz.symm
-    have h6 : (x.Divides z) := intofnat_div_means_div x z h5
+    have x_neq_zero := h3
+    rw[hx] at x_neq_zero
+    have x_neq_zero := intof_nat_neq_zero_means_neq x x_neq_zero
+    have h6 : (x.Divides z) := intofnat_div_means_div x z h5 x_neq_zero
     unfold MyNat.Nat.Divides at h6
     obtain ⟨ y, hy ⟩ := h6
     have b_is_nat_y : (b = intOfNat y) := by

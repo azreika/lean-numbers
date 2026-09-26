@@ -691,4 +691,170 @@ theorem add_ltes (a b c d : Nat) (h1 : a ≤ b) (h2 : c ≤ d) :
       exact hpre
     exact lte_trans (a+c) (b+c) (b+d) h3 h4
 
+theorem leq_succ (a : Nat) : ( a ≤ a.succ )  :=
+  by
+    induction a with
+    | zero => rfl
+    | succ a ih =>
+    change a ≤ a.succ
+    exact ih
+
+theorem lte_means_eq_or_one (a b : Nat) (h1 : a ≤ b) :
+  (a = b) ∨ (a.succ ≤ b) :=
+  by
+    induction a generalizing b with
+    | zero =>
+    cases b with
+      | zero =>
+      left
+      rfl
+      | succ b =>
+      right
+      rfl
+    | succ a ih =>
+    cases b with
+      | zero =>
+      have h2 := MyNat.gte_zero a.succ
+      have h3 := MyNat.lte_antisym a.succ .zero h1 h2
+      have h4 := succed_is_nonzero a
+      contradiction
+      | succ b =>
+      have h2 : (a ≤ b) := h1
+      by_cases hx : (a.succ = b.succ)
+      left
+      exact hx
+      right
+      have hy : (b ≤ b.succ) := leq_succ b
+      have h3 := lte_trans a b b.succ h2 hy
+      change a.succ ≤ b
+      induction b generalizing a with
+      | zero =>
+      have hyy := gte_zero a
+      have hz := lte_antisym a Nat.zero h2 hyy
+      have hz'' : (a.succ = Nat.zero.succ) := succ_same a Nat.zero hz
+      contradiction
+      | succ b jh =>
+      change a ≤ b
+      have  h1' : (a ≤ b.succ) := h1
+      have ih2 := ih b.succ h1'
+      by_cases hx' : a = b.succ
+      rw[hx'] at hx
+      contradiction
+      have ih3 := Or.elim ih2 hx'
+      simp at ih3
+      have ih4 : (a≤ b) := ih3
+      exact ih4
+
+theorem not_lte_lemma_01 (a b : Nat) (h1 : ¬ a.succ ≤ b.succ) : (¬ a ≤ b) := h1
+
+theorem not_lte_lemma (a b : Nat) (h1 : ¬ a ≤ b) : (b ≤ a) :=
+  by
+    induction a generalizing b with
+    | zero =>
+    have h2 := gte_zero b
+    contradiction
+    | succ a ih =>
+    cases b with
+    | zero =>
+    rfl
+    | succ b =>
+    change b ≤ a
+    have h2 := not_lte_lemma_01 a b  h1
+    exact ih b h2
+
+theorem not_lte_means_flip_lt (a b : Nat) ( h1 : ¬ a.lte b) :
+  b.lt a :=
+  by
+    dsimp [Nat.lt]
+    constructor
+    apply not_lte_lemma
+    exact h1
+    apply Classical.byContradiction
+    intro h2
+    simp at h2
+    rw[h2] at h1
+    have h3 := leq_itself a
+    contradiction
+
+theorem neq_succ_means_neq (a b : Nat) (h1 : ¬ a.succ = b.succ ) :
+  (¬ a = b) :=
+  by
+    apply Classical.byContradiction
+    intro h2
+    simp at h2
+    rw[h2] at h1
+    contradiction
+
+theorem squeeze_law ( a b : Nat) (h1 : a ≤ b ) (h2 : b ≤ a.succ ) :
+  (b = a ) ∨ (b = a.succ) :=
+  by
+    induction a generalizing b with
+    | zero =>
+      cases b with
+      | zero =>
+        left
+        rfl
+      | succ b =>
+        right
+        have h3 : (b ≤ Nat.zero) := h2
+        have h4 := gte_zero b
+        have h5 := lte_antisym Nat.zero b h4 h3
+        rw[h5]
+    | succ a ih =>
+      cases b with
+      | zero =>
+        have h3 := gte_zero a.succ
+        have h4 := lte_antisym Nat.zero a.succ h3 h1
+        left
+        exact h4
+      | succ b =>
+        by_cases hx : (b.succ = a.succ)
+        left
+        exact hx
+        right
+        apply succ_same
+        have h3 :( a ≤ b ) := h1
+        have h3' : (b ≤ a.succ) := h2
+        have h4 := ih b h3 h3'
+        have hx2 := neq_succ_means_neq b a hx
+        have h5 := Or.elim h4 hx2
+        simp at h5
+        exact h5
+
+theorem neq_sym (a b : Nat) (h1 : ¬ a = b) : ¬ b = a := by
+  intro h12
+  symm at h12
+  contradiction
+
+theorem lt_means_succ_lte ( a b : Nat ) (h1: a.lt b) : (a.succ ≤ b) :=
+  by
+    apply Classical.byContradiction
+    intro h2
+    have h3 := not_lte_means_flip_lt a.succ b h2
+    dsimp [Nat.lt] at h1
+    dsimp [Nat.lt] at h3
+    have x1 := h1.left
+    have x2 := h1.right
+
+    have y1 := h3.left
+    have y2 := h3.right
+
+    have z1 := squeeze_law a b x1 y1
+    have x3 := neq_sym a b x2
+    have z2 := Or.elim z1 x3
+    simp at z2
+    contradiction
+
+theorem nat_cancel_to_zero (a b : Nat) (h1 : a = b + a) : (b = .zero) := by
+  have h2 : (.zero + a = b + a) := by
+    rw[zero_add]
+    exact h1
+  have h3 := add_right_cancel Nat.zero b a h2
+  exact h3.symm
+
+theorem lte_and_neq_means_lt (a b : Nat) (h1 : a ≤ b) (h2 : a ≠ b) : (a.lt b) :=
+  by
+    have h3 := And.intro h1 h2
+    exact h3
+
 end MyNat
