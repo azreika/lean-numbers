@@ -1,5 +1,7 @@
 import Project1.Integers.Inequalities
 import Project1.Integers.Arithmetic
+import Project1.Nat.Parity
+
 
 namespace MyInt
 
@@ -72,7 +74,7 @@ theorem intofnat_geq_zero ( a : Nat ) : (.zero ≤ intOfNat a) :=
     have h4 := lte_trans Int.zero (intOfNat a) (intOfNat a + Int.one) ih h3
     exact h4
 
-theorem parity_iff_nat (a : Nat) : Int.Even (intOfNat a) ↔ MyNat.Nat.Even a :=
+theorem parity_iff_nat_even (a : Nat) : Int.Even (intOfNat a) ↔ MyNat.Nat.Even a :=
   by
     constructor
 
@@ -110,23 +112,61 @@ theorem parity_iff_nat (a : Nat) : Int.Even (intOfNat a) ↔ MyNat.Nat.Even a :=
     rw[<-mul_mk_nat]
     exact eq_means_intofnat_eq a (MyNat.Nat.two * k) hk
 
-theorem even_or_odd_intofnat (a : Nat) : (Int.Even (intOfNat a)) ∨ (Int.Odd (intOfNat a)) :=
+
+theorem parity_iff_nat_odd (a : Nat) : Int.Odd (intOfNat a) ↔ MyNat.Nat.Odd a :=
   by
+    sorry
+
+theorem parity_iff_negate_even (a : Int):  (Int.Even a) ↔ Int.Even a.negate :=
+  by
+    sorry
+
+
+theorem one_minus_two_is_neg_one : (Int.one - Int.two = Int.one.negate) := sorry
+theorem parity_iff_negate_odd (a : Int):  (Int.Odd a) ↔ Int.Odd a.negate :=
+  by
+    constructor
+
+    intro a_odd
+    dsimp [Int.Odd] at a_odd
+    dsimp [Int.Odd]
+    obtain ⟨ k, hk ⟩ := a_odd
+    exists (k.negate + Int.one.negate)
+    rw[mul_add_distributes]
+    rw[<-negate_to_mul_neg_one]
+    rw[int_add_associates]
+    rw (occs := .pos [2]) [int_add_commutes]
+    rw[<-sub_is_plus_neg]
+
+    rw[one_minus_two_is_neg_one]
+
+
+    sorry
+
     sorry
 
 theorem even_or_odd (a : Int) : (Int.Even a ∨ Int.Odd a) :=
   by
-    by_cases h1: Int.Even a
-    left
-    exact h1
+    by_cases hh : (a ≥ .zero)
+    have h1 := nonneg_is_nat a hh
+    obtain ⟨ k, hk ⟩ := h1
+    rw[hk]
 
-    right
-    unfold Int.Odd
-    unfold Int.Even at h1
-    apply Classical.byContradiction
-    intro h2
+    rw[parity_iff_nat_even]
+    rw[parity_iff_nat_odd]
+    exact (MyNat.odd_or_even k).symm
 
-    sorry
+    have h2 := not_lte_means_flip_lt Int.zero a hh
+    have h3 := negative_zero_lte_from_lt a h2
+    have h1 := nonneg_is_nat a.negate (lt_means_lte Int.zero a.negate h3)
+    obtain ⟨ k, hk ⟩ := h1
+
+    rw[parity_iff_negate_odd]
+    rw[parity_iff_negate_even]
+    rw[hk]
+    rw[parity_iff_nat_even]
+    rw[parity_iff_nat_odd]
+    exact (MyNat.odd_or_even k).symm
 
 theorem not_even_means_odd (a : Int ) (h1 : ¬ Int.Even a) : Int.Odd a :=
   by
@@ -137,6 +177,7 @@ theorem not_even_means_odd (a : Int ) (h1 : ¬ Int.Even a) : Int.Odd a :=
 
 theorem even_means_not_odd (a : Int) : (Int.Even a) →  (¬ Int.Odd a ) :=
   by
+
     sorry
 
 theorem even_square_means_even (a : Int) (h1 : Int.Even (a*a)) : (Int.Even a) :=
