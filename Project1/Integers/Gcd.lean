@@ -21,6 +21,22 @@ theorem euclidean ( a b : Int ) (ha : .zero ≤ a) (hb : .zero < b):
     (.zero ≤ r) ∧
     (r < b) :=
   by
+    by_cases hx : (b = Int.one)
+
+    rw[hx]
+    exists .zero
+    exists a
+    rw[int_mul_one]
+    constructor
+    have hy := inverse_nat a
+    rw[sub_is_plus_neg]
+    exact hy.symm
+
+    constructor
+    rfl
+
+    exact zero_lt_one
+
     let A : Set Int := fun x => ∃ q : Int, (x = b * q - a) ∧ (.zero ≤ x)
 
     have b_geq_one := zero_lt_means_one_lte b hb
@@ -38,8 +54,18 @@ theorem euclidean ( a b : Int ) (ha : .zero ≤ a) (hb : .zero < b):
       rw[negate_to_mul_neg_one]
       rw[<-mul_add_distributes]
       rw[<-sub_is_plus_neg]
+      have b_minus_one_neq_zero : (b - Int.one) ≠ .zero :=
+        by
+          intro hyy
+          have hyz := add_right_congr (b-Int.one) Int.zero Int.one hyy
+          rw[sub_is_plus_neg] at hyz
+          rw[int_add_associates] at hyz
+          rw[inverse_nat2] at hyz
+          rw[int_add_zero, int_zero_add] at hyz
+          contradiction
       have hh := geq_zero_means_prod_geq a (b-Int.one) ha b_minus_one_geq_zero
-      have hh2 := lte_trans Int.zero a (a * (b-Int.one)) ha hh
+
+      have hh2 := lte_trans Int.zero a (a * (b-Int.one)) ha (hh b_minus_one_neq_zero)
       exact hh2
     have A_all_pos : (∀ (x : Int), x ∈ A → x ≥ .zero) := by
       intro x
@@ -661,7 +687,14 @@ theorem one_is_unit (a : Int) (h1: a.Divides .one) (h2x: .zero < a) : a = .one :
       rw[hk] at hh'
       exact hh'
     have h3 : (.zero ≤ k) := prod_geq_means_op_geq a k h3_0 h2 a_neq_zero
-    have h4 : (a ≤ a * k) := geq_zero_means_prod_geq a k h2 h3
+
+    have k_neq_zero : (k ≠ .zero) :=
+      by
+        intro hk2
+        rw[hk2] at hh
+        rw[int_mul_zero] at hh
+        contradiction
+    have h4 : (a ≤ a * k) := geq_zero_means_prod_geq a k h2 h3 k_neq_zero
     have h4_1 : (a * k ≠ .zero) := by
       intro bb
       rw[bb] at hk

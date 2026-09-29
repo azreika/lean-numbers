@@ -145,6 +145,18 @@ theorem zero_lt_two : (Int.zero < Int.two) := by
   exact zero_leq_two
   exact two_neq_zero.symm
 
+theorem zero_lt_one : (Int.zero < Int.one) := by
+  simp only [(· < · )]
+  dsimp [Int.lt]
+  constructor
+  rfl
+
+  rw[Int.zero]
+  rw[Int.one]
+  intro hx
+  have hy := intofnat_eq MyNat.Nat.zero MyNat.Nat.one hx
+  contradiction
+
 theorem intofrep_eq_means_leq ( a b : IntRep ) (h1 : a = b) :
   (intOfRep a ≤ intOfRep b) :=
   by
@@ -539,6 +551,52 @@ theorem contrapositive (a b: Prop) (h1 : a → b) :
     have h3 := h1 ha
     contradiction
 
+theorem eq_means_lte (a b :Int) (h1: a = b) : a ≤ b :=
+  by
+    rw[h1]
+    refine Quotient.inductionOn b ?_
+    intro c
+    rw[<-intOfRep]
+    exact intofrep_eq_means_leq c c rfl
+
+theorem intrep_not_leq_means_not ( a b : IntRep ) (h1 : ¬ (intOfRep a ≤ intOfRep b)) :
+  (¬ (a.pos + b.neg ≤  b.pos + a.neg)) :=
+  by
+    apply Classical.byContradiction
+    intro h2
+    simp at h2
+    have h3 := intofrep_leq_rev a b h2
+    contradiction
+
+theorem not_lte_means_flip_lt ( a b : Int) (h1 : ¬ (a ≤ b)) :
+  (b < a) :=
+  by
+    simp only [(· < ·)]
+    dsimp [Int.lt]
+    constructor
+
+    have h2 := exists_intofrep a
+    obtain ⟨ ka , hka ⟩ := h2
+
+    have h3 := exists_intofrep b
+    obtain ⟨ kb , hkb ⟩ := h3
+
+    rw[hka]
+    rw[hkb]
+
+    apply intofrep_leq_rev
+    rw[hka] at h1
+    rw[hkb] at h1
+
+    have h2 := intrep_not_leq_means_not ka kb h1
+    have h3 := MyNat.not_lte_means_flip_lt (ka.pos + kb.neg) (kb.pos + ka.neg) h2
+    have h4 := MyNat.lt_means_lte (kb.pos + ka.neg) (ka.pos + kb.neg) h3
+    exact h4
+
+    intro h2
+    have h3 := eq_means_lte a b h2.symm
+    contradiction
+
 theorem not_lt_means_flip_lte ( a b : Int) (h1 : ¬ (a < b)) :
   (b ≤ a) :=
   by
@@ -551,29 +609,75 @@ theorem not_lt_means_flip_lte ( a b : Int) (h1 : ¬ (a < b)) :
     exact hi
 
     have h2 := contrapositive (a ≤ b) (a = b) h1 hh
+    have h3 := not_lte_means_flip_lt a b h2
+    have h4 := lt_means_lte b a h3
+    exact h4
 
-    sorry
+theorem geq_zero_means_prod_geq ( a b : Int ) ( h1 : .zero ≤ a ) (h2 : .zero ≤ b) (h3 : b ≠ .zero) :
+  (a ≤ a * b) :=
+  by
+    have h3 := nonneg_is_nat a h1
+    have h4 := nonneg_is_nat b h2
+    obtain ⟨ aa , ha ⟩ := h3
+    obtain ⟨ bb, hb ⟩ := h4
 
-theorem not_lte_means_flip_lt ( a b : Int) (h1 : ¬ (a ≤ b)) :
-  (b < a) := sorry
-theorem geq_zero_means_prod_geq ( a b : Int ) ( h1 : .zero ≤ a ) (h2 : .zero ≤ b) :
-  (a ≤ a * b) := sorry
+    rw[ha]
+    rw[hb]
+
+    rw[<-mul_mk_nat]
+    apply intofnat_lte_equiv
+
+    have hbb : (bb ≠ .zero) :=
+      by
+        intro bx
+        have bx' := intofnat_eq_rev bb .zero bx
+        rw [<-Int.zero] at bx'
+        rw[<-hb] at bx'
+        contradiction
+    exact MyNat.mul_nonzero_lte aa bb hbb
 
 theorem zero_lt_means_one_lte ( a : Int ) (h1: .zero < a) :
-  (.one ≤ a) := sorry
+  (.one ≤ a) :=
+    by
+      simp only [(· < · )] at h1
+      dsimp [Int.lt] at h1
+      have h2 := h1.left
+      have h3 := h1.right
+      have h4 := nonneg_is_nat a h2
+      obtain ⟨ k, hk ⟩ := h4
+      rw[hk]
+      rw[hk] at h2
+      rw[hk] at h3
+      rw[Int.zero] at h3
+      rw[Int.zero] at h2
 
-theorem geq_one_means_minus_geq_zero (a : Int) (h1 : .one ≤ a) :
-  (.zero ≤ (a - .one)) :=
-    sorry
-
-theorem prod_nonzero_means_op_nonzero (a b : Int) (h1 : a * b ≠ .zero) :
-  (a ≠ .zero) := sorry
+      have h3' : (intOfNat MyNat.Nat.zero ≠ intOfNat k) := h3
+      have h4 := intof_nat_neq_zero_means_neq k h3'.symm
+      have h5 := MyNat.lte_means_eq_or_one MyNat.Nat.zero k rfl
+      have h6 := Or.elim h5 h4.symm
+      simp at h6
+      rw[<-MyNat.Nat.one] at h6
+      rw[Int.one]
+      apply intofnat_lte_equiv
+      exact h6
 
 theorem zero_lt_means_neq_zero (a : Int) (h1 : .zero < a) :
-  (a ≠ .zero) := sorry
+  (a ≠ .zero) := by
+    intro hx
+    simp only [(· < · )] at h1
+    dsimp [Int.lt] at h1
+    have h2 := h1.right
+    symm at hx
+    contradiction
 
-theorem lte_less_sum (a b : Int) (h1 : b ≥ .zero) :
-  a ≤ a + b := sorry
+theorem prod_nonzero_means_op_nonzero (a b : Int) (h1 : a * b ≠ .zero) :
+  (a ≠ .zero) :=
+  by
+    intro h2
+    rw[h2] at h1
+    rw[int_mul_commutes] at h1
+    rw[int_mul_zero] at h1
+    contradiction
 
 theorem integer_gaps (a b : Int) (h1 : a ≤ b) :
   ∃ (m : Int), (.zero ≤ m) ∧ (b = a + m) := sorry
@@ -587,6 +691,14 @@ theorem lt_plus_pos_means_lt (a b c: Int) (h1: a ≥ c) (h2 : b > .zero) :
 theorem lte_add_right (a b c : Int) ( h1 : a ≥ b ) : a + c ≥ b + c :=
   by
     sorry
+
+theorem geq_one_means_minus_geq_zero (a : Int) (h1 : .one ≤ a) :
+  (.zero ≤ (a - .one)) :=
+  by
+    sorry
+
+theorem lte_less_sum (a b : Int) (h1 : b ≥ .zero) :
+  a ≤ a + b := sorry
 
 theorem negative_zero_lte_from_lt ( a : Int) (h1 : a < .zero) :
   (a.negate > .zero) :=

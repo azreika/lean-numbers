@@ -474,6 +474,16 @@ theorem add_inequalities ( a b c d : Nat ) (h1 : Nat.lt a b) (h2 : Nat.lt c d ) 
     rw (occs := .pos [2]) [add_commutes]
     exact h5
 
+
+theorem add_lte_inequalities ( a b c d : Nat ) (h1 : Nat.lte a b) (h2 : Nat.lte c d ) :
+  Nat.lte (a + c) (b + d) := by
+    have h3 := lte_add_term a b c h1
+    have h4 := lte_add_term c d b h2
+    rw[add_commutes] at h4
+    have h5 := lte_trans (a + c) (b + c) (d + b) h3 h4
+    rw (occs := .pos [2]) [add_commutes]
+    exact h5
+
 theorem natural_gap ( a b : Nat ) ( h1 : Nat.lte a b ) :
   ∃ (m : Nat), a + m = b :=
   by
@@ -856,5 +866,30 @@ theorem lte_and_neq_means_lt (a b : Nat) (h1 : a ≤ b) (h2 : a ≠ b) : (a.lt b
   by
     have h3 := And.intro h1 h2
     exact h3
+
+theorem mul_nonzero_lte (a b : Nat) (h1 : b ≠ .zero) :
+  (a ≤ a * b) :=
+  by
+    induction a generalizing b with
+    | zero =>
+      rw[zero_mul]
+      rfl
+    | succ a ih =>
+      rw[add_one]
+      rw[mul_commutes]
+      rw[mul_add_distributes]
+      rw[mul_one]
+
+      have h2 := ih b h1
+      rw[mul_commutes] at h2
+      have h3 : (.one ≤ b) := by
+        have h4 := lte_means_eq_or_one .zero b rfl
+        symm at h1
+        have h5 := Or.elim h4 h1
+        simp at h5
+        rw[<-Nat.one] at h5
+        exact h5
+      have h4 := add_lte_inequalities Nat.one b a (b*a) h3 h2
+      exact h4
 
 end MyNat
