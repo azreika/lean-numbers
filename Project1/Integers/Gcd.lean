@@ -651,7 +651,7 @@ theorem gcd_is_gcd (a b : Int) :
 theorem one_is_unit (a : Int) (h1: a.Divides .one) (h2x: .zero < a) : a = .one :=
   by
     have h2 := lt_means_lte .zero a h2x
-    have a_neq_zero : (a ≠ .zero) := sorry
+    have a_neq_zero : (a ≠ .zero) := (lt_means_neq .zero a h2x).symm
     dsimp [Int.Divides] at h1
     obtain ⟨ k, hk ⟩ := h1
     have hh : (.one ≤ a * k) := by

@@ -475,8 +475,84 @@ theorem prod_geq_means_op_geq (a b : Int) (h1 : .zero ≤ a * b) (h2 : .zero ≤
       exact hh2
     exact intofnat_means_geq_zero b y b_is_nat_y
 
+
+theorem intofnat_lt_equiv (a b : Nat) (h1 : a.lt b) :
+  (intOfNat a < intOfNat b) :=
+  by
+    dsimp [intOfNat]
+    simp only [(· < · )]
+    dsimp [Int.lt]
+    constructor
+
+    apply intofrep_leq_rev
+    simp
+    rw[MyNat.add_zero, MyNat.add_zero]
+    dsimp [MyNat.Nat.lt] at h1
+    exact h1.left
+
+    intro h2
+    have h3 := intofrep_eq (IntRep.mk a MyNat.Nat.zero) (IntRep.mk b MyNat.Nat.zero) h2
+    simp at h3
+    rw[MyNat.add_zero, MyNat.zero_add] at h3
+    have h4 := MyNat.lt_means_neq a b h1
+    contradiction
+
+theorem intofnat_eq_rev (a b : Nat) (h1 : a = b) : intOfNat a = intOfNat b :=
+  by
+    dsimp [intOfNat]
+    apply intofrep_eq_rev
+    simp
+    rw[MyNat.add_zero, MyNat.add_zero]
+    exact h1
+
+theorem intofnat_lt_equiv_rev (a b : Nat) (h1 : intOfNat a < intOfNat b) :
+  (a.lt b) :=
+  by
+    simp only [(· < · )] at h1
+    dsimp [Int.lt] at h1
+    have h2 := h1.left
+    have h3 := h1.right
+    dsimp [MyNat.Nat.lt]
+    constructor
+
+    dsimp [intOfNat] at h2
+    have h4 := intofrep_leq (IntRep.mk a MyNat.Nat.zero) (IntRep.mk b MyNat.Nat.zero) h2
+    simp at h4
+    rw[MyNat.add_zero, MyNat.add_zero] at h4
+    exact h4
+
+    intro h4
+    have h5 := intofnat_eq_rev a b h4
+    contradiction
+
+theorem lt_means_neq ( a b : Int ) (h1: a < b) : a ≠ b :=
+  by
+    simp only [(· < ·)] at h1
+    dsimp [Int.lt] at h1
+    exact h1.right
+
+theorem contrapositive (a b: Prop) (h1 : a → b) :
+  ¬ b → ¬ a :=
+  by
+    intro h2
+    intro ha
+    have h3 := h1 ha
+    contradiction
+
 theorem not_lt_means_flip_lte ( a b : Int) (h1 : ¬ (a < b)) :
-  (b ≤ a) := sorry
+  (b ≤ a) :=
+  by
+    simp only [(· < ·)] at h1
+    dsimp [Int.lt] at h1
+    simp at h1
+    by_cases hh: a = b
+
+    have hi := eq_means_leq b a hh.symm
+    exact hi
+
+    have h2 := contrapositive (a ≤ b) (a = b) h1 hh
+
+    sorry
 
 theorem not_lte_means_flip_lt ( a b : Int) (h1 : ¬ (a ≤ b)) :
   (b < a) := sorry
@@ -501,8 +577,6 @@ theorem lte_less_sum (a b : Int) (h1 : b ≥ .zero) :
 
 theorem integer_gaps (a b : Int) (h1 : a ≤ b) :
   ∃ (m : Int), (.zero ≤ m) ∧ (b = a + m) := sorry
-
-theorem lt_means_neq ( a b : Int ) (h1: a < b) : a ≠ b := sorry
 
 theorem sum_lte_is_lte (a b c : Int) (h1: a ≥ c) (h2: b ≥ c) :
   (a + b ≥ c) := sorry
