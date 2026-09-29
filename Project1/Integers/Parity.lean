@@ -63,7 +63,7 @@ theorem intofnat_geq_zero ( a : Nat ) : (.zero ≤ intOfNat a) :=
     have h2 := int_nat_succ a b rfl
     rw[<-h2]
     have h3 : (b ≤ b + .one) := by
-      have h4 := lte_add_right Int.one Int.zero b rfl
+      have h4 := lte_add_right Int.zero Int.one b rfl
       rw[int_add_commutes]
       rw[int_zero_add] at h4
       exact h4

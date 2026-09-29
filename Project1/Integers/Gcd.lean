@@ -165,7 +165,22 @@ theorem gt_zero_plus_gte_zero (a b : Int) (h1: a > .zero) (h2 : b ≥ .zero) :
     constructor
 
     have hh := lt_means_lte Int.zero a h1
-    exact sum_lte_is_lte a b Int.zero hh h2
+
+    have anat := nonneg_is_nat a (lt_means_lte Int.zero a h1)
+    obtain ⟨ anat , hanat ⟩ := anat
+
+    have bnat := nonneg_is_nat b h2
+    obtain ⟨ bnat , hbnat ⟩ := bnat
+
+    rw[hbnat, hanat]
+    rw[Int.zero]
+    rw[<-add_mk_nat]
+    apply intofnat_lte_equiv_rev
+    simp
+    rw[MyNat.zero_add]
+    rw[MyNat.add_zero]
+    apply intofnat_lte_equiv
+    exact MyNat.gte_zero (anat+bnat)
 
     have hh := lt_plus_pos_means_lt b a Int.zero  h2 h1
     rw[int_add_commutes] at hh

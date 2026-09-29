@@ -537,6 +537,11 @@ theorem intofnat_lt_equiv_rev (a b : Nat) (h1 : intOfNat a < intOfNat b) :
     have h5 := intofnat_eq_rev a b h4
     contradiction
 
+theorem intofnat_lte_equiv_rev (a b : Nat) (h1 : intOfNat a ≤ intOfNat b) :
+  (a ≤ b) :=
+  by
+    exact h1
+
 theorem lt_means_neq ( a b : Int ) (h1: a < b) : a ≠ b :=
   by
     simp only [(· < ·)] at h1
@@ -679,29 +684,215 @@ theorem prod_nonzero_means_op_nonzero (a b : Int) (h1 : a * b ≠ .zero) :
     rw[int_mul_zero] at h1
     contradiction
 
-theorem integer_gaps (a b : Int) (h1 : a ≤ b) :
-  ∃ (m : Int), (.zero ≤ m) ∧ (b = a + m) := sorry
-
-theorem sum_lte_is_lte (a b c : Int) (h1: a ≥ c) (h2: b ≥ c) :
-  (a + b ≥ c) := sorry
-
-theorem lt_plus_pos_means_lt (a b c: Int) (h1: a ≥ c) (h2 : b > .zero) :
-  a + b > c := sorry
-
-theorem lte_add_right (a b c : Int) ( h1 : a ≥ b ) : a + c ≥ b + c :=
+theorem integer_gaps_pos ( a b : Int ) (h1 : a ≤ b) (a_assumption : a ≥ .zero) :
+  ∃ (m : Int), (.zero ≤ m) ∧ (b = a + m) :=
   by
-    sorry
+    have a_is_nat := nonneg_is_nat a a_assumption
+    obtain ⟨ anat, hanat ⟩ := a_is_nat
+    have b_geq_zero := lte_trans .zero a b a_assumption h1
+    have b_is_nat := nonneg_is_nat b b_geq_zero
+    obtain ⟨ bnat, hbnat ⟩ := b_is_nat
 
-theorem geq_one_means_minus_geq_zero (a : Int) (h1 : .one ≤ a) :
-  (.zero ≤ (a - .one)) :=
+    rw[hbnat] at h1
+    rw[hanat] at h1
+
+    have anat_leq_bnat := intofnat_lte_equiv_rev anat bnat h1
+    have h_nat_gap := MyNat.natural_gap anat bnat anat_leq_bnat
+    obtain ⟨ m, hm ⟩ := h_nat_gap
+    exists intOfNat m
+    constructor
+    rfl
+
+    have hm2 := intofnat_eq_rev (anat + m) bnat hm
+    rw[add_mk_nat] at hm2
+    rw[<-hanat] at hm2
+    rw[<-hbnat] at hm2
+    exact hm2.symm
+
+theorem negate_both_sides (a b : Int) (h1 : a = b) :
+  a.negate = b.negate :=
   by
-    sorry
+    rw[h1]
 
-theorem lte_less_sum (a b : Int) (h1 : b ≥ .zero) :
-  a ≤ a + b := sorry
+theorem negate_twice (a : Int) : (a.negate.negate = a) :=
+  by
+    refine Quotient.inductionOn a ?_
+    intro a
+    rw[<-intOfRep]
+    rw[<-negate_mk]
+    rw[<-negate_mk]
+    rfl
+
+theorem unfold_lt (a b : Int) (h1 : a < b) : a ≤ b ∧ a ≠ b := by
+  exact h1
 
 theorem negative_zero_lte_from_lt ( a : Int) (h1 : a < .zero) :
   (a.negate > .zero) :=
   by
-    sorry
+    simp only [(· < · )] at h1
+    simp only [(· > · )]
+    simp only [(· < · )]
+    dsimp [Int.lt] at h1
+    dsimp [Int.lt]
+
+    have h2 := h1.left
+    have h3 := h1.right
+    constructor
+
+    have h4 := exists_intofrep a
+    obtain ⟨ k, hk ⟩ := h4
+    rw[hk]
+    rw[<-negate_mk]
+    rw[Int.zero]
+    rw[intOfNat]
+    apply intofrep_leq_rev
+    simp
+    rw[MyNat.zero_add, MyNat.add_zero]
+    cases k with
+    | mk kpos kneg =>
+      dsimp [IntRep.negate]
+      rw[hk] at h2
+      rw[Int.zero, intOfNat] at h2
+      have h3 := intofrep_leq (IntRep.mk kpos kneg) (IntRep.mk MyNat.Nat.zero MyNat.Nat.zero) h2
+      simp at h3
+      rw[MyNat.add_zero, MyNat.zero_add] at h3
+      exact h3
+
+    intro h4
+    have h5 : Int.zero.negate = a.negate.negate := negate_both_sides Int.zero a.negate h4
+    rw[<-zero_negate] at h5
+    rw[negate_twice] at h5
+    symm at h5
+    contradiction
+
+theorem lte_add_right (a b c: Int) (h1 : a ≤ b) : (a + c ≤ b + c) :=
+  by
+    have h2 := exists_intofrep a
+    have h3 := exists_intofrep b
+    have h4 := exists_intofrep c
+
+    obtain ⟨ ka, hka ⟩ := h2
+    obtain ⟨ kb , hkb ⟩ := h3
+    obtain ⟨ kc, hkc ⟩ := h4
+
+    rw[hkc, hkb, hka]
+    rw[<-add_mk]
+    rw[<-add_mk]
+    apply intofrep_leq_rev
+    cases ka with
+    | mk kapos kaneg =>
+    cases kb with
+    | mk kbpos kbneg =>
+    cases kc with
+    | mk kcpos kcneg =>
+    simp only [(· + · )]
+    dsimp [Add.add]
+    dsimp [IntRep.add]
+    change (kapos + kcpos + (kbneg + kcneg)) ≤ (kbpos + kcpos) + (kaneg + kcneg)
+    rw[<-add_associates]
+    rw[<-add_associates]
+    apply MyNat.lte_add_term
+    rw[MyNat.add_commutes]
+    rw (occs := .pos [3]) [MyNat.add_commutes]
+    rw[<-add_associates]
+    rw[<-add_associates]
+    apply MyNat.lte_add_term
+    rw[hka] at h1
+    rw[hkb] at h1
+    have h2 := intofrep_leq (IntRep.mk kapos kaneg) (IntRep.mk kbpos kbneg) h1
+    simp at h2
+    rw[add_commutes]
+    rw (occs := .pos [2]) [add_commutes]
+    exact h2
+
+theorem integer_gaps (a b : Int) (h1 : a ≤ b) :
+  ∃ (m : Int), (.zero ≤ m) ∧ (b = a + m) :=
+  by
+    exists (b + a.negate)
+    constructor
+    have h2 := lte_add_right a b a.negate h1
+    rw[inverse_nat] at h2
+    exact h2
+
+    rw[<-int_add_associates]
+    rw[int_add_commutes]
+    rw[<-int_add_associates]
+    rw[inverse_nat2]
+    rw[int_zero_add]
+
+
+theorem lte_less_sum (a b : Int) (h1 : b ≥ .zero) :
+  a ≤ a + b :=
+  by
+    have h2 := exists_intofrep a
+    have h3 := exists_intofrep b
+
+    obtain ⟨ ka, hka ⟩ := h2
+    obtain ⟨ kb , hkb ⟩ := h3
+
+    rw[hkb, hka]
+    rw[<-add_mk]
+    apply intofrep_leq_rev
+    cases ka with
+    | mk kapos kaneg =>
+    cases kb with
+    | mk kbpos kbneg =>
+    simp only [(· + · )]
+    dsimp [Add.add]
+    dsimp [IntRep.add]
+    change (kapos + (kaneg + kbneg)) ≤  (kapos + kbpos) + kaneg
+    rw[add_associates]
+    rw[add_commutes]
+    rw (occs := .pos [3]) [add_commutes]
+    apply MyNat.lte_add_term
+    rw[MyNat.add_commutes]
+    apply MyNat.lte_add_term
+    rw[hkb] at h1
+    rw[Int.zero, intOfNat] at h1
+    have h5 := intofrep_leq (IntRep.mk MyNat.Nat.zero MyNat.Nat.zero) (IntRep.mk kbpos kbneg) h1
+    simp at h5
+    rw[MyNat.zero_add, MyNat.add_zero] at h5
+    exact h5
+
+theorem lt_plus_pos_means_lt (a b c: Int) (h1: a ≥ c) (h2 : b > .zero) :
+  a + b > c :=
+  by
+    simp only [(· > · )]
+    simp only [(· < · )]
+    dsimp[Int.lt]
+    constructor
+    simp only [(· > · )] at h2
+    simp only [(· < · )] at h2
+    dsimp [Int.lt] at h2
+    have h3 := h2.left
+    have h4 := h2.right
+
+    have h5 : (a ≤ a + b) :=
+      by
+        exact lte_less_sum a b h3
+    exact lte_trans c a (a + b) h1 h5
+
+    intro hc
+    rw[hc] at h1
+    have h3 := lte_add_right (a + b) a a.negate h1
+    rw[inverse_nat] at h3
+    rw[int_add_commutes] at h3
+    rw[<-int_add_associates] at h3
+    rw[inverse_nat2] at h3
+    rw[int_zero_add] at h3
+    simp only [(· > · )] at h2
+    simp only [(· < · )] at h2
+    dsimp [Int.lt] at h2
+    have h4 := h2.left
+    have h5 := lte_antisym Int.zero b h4 h3
+    have h6 := h2.right
+    contradiction
+
+theorem geq_one_means_minus_geq_zero (a : Int) (h1 : .one ≤ a) :
+  (.zero ≤ (a - .one)) :=
+  by
+    have h2 := lte_add_right Int.one a Int.one.negate h1
+    rw[inverse_nat] at h2
+    rw[sub_is_plus_neg]
+    exact h2
 end MyInt
