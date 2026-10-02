@@ -112,17 +112,106 @@ theorem parity_iff_nat_even (a : Nat) : Int.Even (intOfNat a) ↔ MyNat.Nat.Even
     rw[<-mul_mk_nat]
     exact eq_means_intofnat_eq a (MyNat.Nat.two * k) hk
 
-
 theorem parity_iff_nat_odd (a : Nat) : Int.Odd (intOfNat a) ↔ MyNat.Nat.Odd a :=
   by
-    sorry
+    constructor
+    intro h1
+    dsimp [Int.Odd] at h1
+    obtain ⟨ k, hk ⟩ := h1
+    dsimp [MyNat.Nat.Odd]
+    have hk2 : (k ≥ .zero) := by
+      have nata_geq_zero := intofnat_geq_zero a
+      rw[hk] at nata_geq_zero
+      have hk3 : (Int.zero + Int.one.negate ≤ Int.two * k + Int.one + Int.one.negate) :=
+        by
+          simp
+          by_cases hx : k ≥ .one
+          have hx2 := int_lte_mul_left Int.one k Int.two hx rfl
+          simp at hx2
+
+          have hx3 : Int.two ≥ .zero := by rfl
+          have hx4 : Int.one.negate ≤ .zero := by rfl
+          have hx5 : Int.one.negate ≤ Int.two := by rfl
+
+          have k_geq_zero : (k ≥ .zero) := by
+            exact lte_trans Int.zero Int.one k rfl hx
+
+          have k_neq_zero : (k ≠ .zero) := by
+            intro hno
+            rw[hno] at hx
+            contradiction
+          have hx6 := int_lte_mul_left Int.one.negate Int.two k hx5 k_geq_zero
+          have hx8 : (Int.two * k ≥ .zero) := by
+            have hx9 := geq_zero_means_prod_geq Int.two k rfl k_geq_zero k_neq_zero
+            exact lte_trans Int.zero Int.two (Int.two * k) rfl hx9
+          exact lte_trans Int.one.negate .zero (Int.two*k) hx4 hx8
+
+          by_cases hx2 : k = .zero
+          rw[hx2]
+          simp
+          rfl
+
+          have hx3 : (k < .zero) :=
+            by
+              sorry
+          have hx4 : (k + Int.one.negate < Int.one.negate) := sorry
+
+          sorry
+      simp at hk3
+
+      sorry
+    have exists_knat := nonneg_is_nat k hk2
+    obtain ⟨knat, hknat⟩ := exists_knat
+    exists knat
+    apply intofnat_eq
+    rw[add_mk_nat]
+    rw[<-Int.one]
+    rw[mul_mk_nat]
+    rw[<-Int.two]
+    rw[<-hknat]
+    exact hk
+
+    dsimp [Int.Odd]
+    intro h1
+    dsimp [MyNat.Nat.Odd] at h1
+    obtain ⟨ knat , hknat ⟩ := h1
+    exists intOfNat knat
+    rw[Int.two]
+    rw[<-mul_mk_nat]
+    rw[Int.one]
+    rw[<-add_mk_nat]
+    apply intofnat_eq_rev
+    exact hknat
 
 theorem parity_iff_negate_even (a : Int):  (Int.Even a) ↔ Int.Even a.negate :=
   by
     sorry
 
+theorem intofrep_plus (a b : IntRep) :
+  (a + b = IntRep.mk (a.pos + b.pos) (a.neg + b.neg)) :=
+    by
+      rfl
 
-theorem one_minus_two_is_neg_one : (Int.one - Int.two = Int.one.negate) := sorry
+
+
+theorem one_minus_two_is_neg_one : (Int.one - Int.two = Int.one.negate) :=
+  by
+    rw[sub_is_plus_neg]
+    rw [Int.one]
+    rw [Int.two]
+    rw [intOfNat, intOfNat]
+    rw[<-negate_mk]
+    rw[<-negate_mk]
+    rw[<-add_mk]
+    rw[intofrep_plus]
+    simp
+    dsimp [IntRep.negate]
+    simp
+    apply intofrep_eq_rev
+    simp
+    rw[<-MyNat.add_one]
+    rw[<-MyNat.Nat.two]
+
 theorem parity_iff_negate_odd (a : Int):  (Int.Odd a) ↔ Int.Odd a.negate :=
   by
     constructor

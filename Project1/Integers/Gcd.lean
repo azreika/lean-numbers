@@ -177,8 +177,6 @@ theorem gt_zero_plus_gte_zero (a b : Int) (h1: a > .zero) (h2 : b ≥ .zero) :
     rw[<-add_mk_nat]
     apply intofnat_lte_equiv_rev
     simp
-    rw[MyNat.zero_add]
-    rw[MyNat.add_zero]
     apply intofnat_lte_equiv
     exact MyNat.gte_zero (anat+bnat)
 
@@ -747,8 +745,6 @@ theorem int_two_neq_one : Int.two ≠ Int.one :=
     simp at h2
     unfold IntRep.Equivalent at h2
     simp at h2
-    rw[MyNat.add_zero] at h2
-    rw[MyNat.add_zero] at h2
     rw[MyNat.Nat.two] at h2
     have h3 := MyNat.succ_is_different MyNat.Nat.one
     have h4 := And.intro h2 h3.symm

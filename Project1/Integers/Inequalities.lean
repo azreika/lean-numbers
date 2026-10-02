@@ -895,4 +895,175 @@ theorem geq_one_means_minus_geq_zero (a : Int) (h1 : .one ≤ a) :
     rw[inverse_nat] at h2
     rw[sub_is_plus_neg]
     exact h2
+
+@[simp] theorem zero_add_nat_simp (a : Nat) : (.zero + a = a) := by
+  rw[MyNat.zero_add]
+
+@[simp] theorem add_zero_nat_simp (a : Nat) : (a + .zero = a) := by
+  rw[MyNat.add_zero]
+
+@[simp] theorem add_zero_int_simp (a : Int) : (.zero + a = a) := by
+  rw[int_zero_add]
+
+@[simp] theorem zero_add_int_simp (a : Int) : (a + .zero = a) := by
+  rw[int_add_zero]
+
+@[simp] theorem inverse_nat_simp1 (a : Int) : (a + a.negate = .zero) := by
+  rw[inverse_nat]
+
+@[simp] theorem inverse_nat_simp2 (a : Int) : (a.negate + a = .zero) := by
+  rw[inverse_nat2]
+
+@[simp] theorem inverse_nat_simp3 (a b : Int) : (b + a) + a.negate = b := by
+  rw[int_add_associates]
+  simp
+
+@[simp] theorem inverse_nat_simp4 (a b : Int) : (b + a.negate) + a = b := by
+  rw[int_add_associates]
+  simp
+
+@[simp] theorem int_mul_one_simp (a : Int) : (a * .one = a) := by
+  rw[int_mul_one]
+
+@[simp] theorem int_one_mul_simp (a : Int) : (.one * a = a) := by
+  rw[int_mul_commutes]
+  rw[int_mul_one]
+
+@[simp] theorem int_zero_mul_simp (a : Int) : (.zero * a = .zero) := by
+  rw[int_mul_commutes]
+  rw[int_mul_zero]
+
+@[simp] theorem int_mul_zero_simp (a : Int) : (a * .zero = .zero) := by
+  rw[int_mul_zero]
+
+@[simp] theorem intrep_add_together (a b : IntRep) :
+  (a + b) = IntRep.mk (a.pos + b.pos) (a.neg + b.neg) :=
+  by
+    cases a with
+    | mk apos aneg =>
+    cases b with
+    | mk bpos bneg =>
+    simp
+    rfl
+
+@[simp] theorem nat_lte_cancel_right1 (a b c d e : Nat) (h1 : a + b + c ≤ d + b + e ) :
+  (a + c ≤ d + e ):= by
+  rw[add_associates] at h1
+  rw[add_associates] at h1
+  rw (occs := .pos [2]) [add_commutes] at h1
+  rw (occs := .pos [4]) [add_commutes] at h1
+  rw[<-add_associates] at h1
+  rw[<-add_associates] at h1
+  have h2 := MyNat.lte_cancel_right (a + c) (d + e) b h1
+  exact h2
+
+theorem lte_cancel_right ( a b c : Int ) ( h1 : a + c ≤ b + c ) :
+  (a ≤ b ) :=
+  by
+    have h2 := exists_intofrep a
+    have h3 := exists_intofrep b
+    have h4 := exists_intofrep c
+
+    obtain ⟨ ka, hka ⟩ := h2
+    obtain ⟨ kb , hkb ⟩ := h3
+    obtain ⟨ kc, hkc ⟩ := h4
+
+    rw[hka, hkb]
+    rw[hka, hkb, hkc] at h1
+    rw[<-add_mk] at h1
+    rw[<-add_mk] at h1
+
+    have h2 := intofrep_leq (ka + kc) (kb + kc) h1
+
+    apply intofrep_leq_rev
+    cases ka with
+    | mk kapos kaneg =>
+    cases kb with
+    | mk kbpos kbneg =>
+    cases kc with
+    | mk kcpos kcneg =>
+    simp
+    simp at h2
+    rw[<-add_associates] at h2
+    rw[<-add_associates] at h2
+    have h3 := MyNat.lte_cancel_right (kapos + kcpos + kbneg) (kbpos + kcpos + kaneg) kcneg h2
+    rw[add_commutes] at h3
+    rw (occs := .pos [3]) [add_commutes] at h3
+    rw[<-add_associates] at h3
+    rw[<-add_associates] at h3
+    have h4 := MyNat.lte_cancel_right (kbneg + kapos) (kaneg + kbpos) kcpos h3
+    rw[add_commutes]
+    rw (occs := .pos [2]) [add_commutes] at h4
+    exact h4
+
+theorem int_lte_mul_left (a b c : Int) (h1 : a ≤ b) (h2: c ≥ .zero) :
+  (a * c ≤ b * c) :=
+  by
+    have h3 := nonneg_is_nat c h2
+    obtain ⟨cnat, hcnat ⟩ := h3
+    rw[hcnat]
+
+    induction cnat generalizing a b c with
+    | zero =>
+    rw[<-Int.zero]
+    simp
+    rfl
+    | succ cnat ih =>
+    rw[MyNat.add_one]
+    rw[add_mk_nat]
+    rw[<-Int.one]
+    rw[mul_add_distributes]
+    rw[mul_add_distributes]
+    simp
+
+    by_cases hx : (c = .zero)
+
+    rw[hx] at hcnat
+    rw[Int.zero] at hcnat
+    have h3 : MyNat.Nat.zero = cnat.succ :=
+        intofnat_eq MyNat.Nat.zero cnat.succ hcnat
+    contradiction
+
+    have c_geq_one : (c ≥ .one ) := by
+      rw[hcnat]
+      rw[Int.one]
+      apply intofnat_lte_equiv
+      rw[hcnat] at h2
+      rw[Int.zero] at h2
+      have h3 := intofnat_lte_equiv_rev MyNat.Nat.zero cnat h2
+      have h4 := MyNat.lte_add_term MyNat.Nat.zero cnat MyNat.Nat.one h3
+      simp at h4
+      rw[<-MyNat.succ_add_one] at h4
+      exact h4
+
+    have c_one_geq_zero : (c - .one ≥ .zero) := by
+      rw[sub_is_plus_neg]
+      have hx2 : ((c + Int.one.negate) + Int.one ≥ Int.zero + Int.one) := by
+        rw[int_add_associates]
+        simp
+        exact c_geq_one
+      exact lte_cancel_right (Int.zero) (c + Int.one.negate)  (Int.one) hx2
+
+    have csucc_geq2 : (c - .one = intOfNat cnat) := by
+      apply add_right_cancel (c := Int.one)
+      rw[sub_is_plus_neg]
+      rw[int_add_associates]
+      simp
+      rw[Int.one]
+      rw[<-add_mk_nat]
+      rw[<-MyNat.succ_add_one]
+      exact hcnat
+    have tt1 : (a * (intOfNat cnat) ≤ b * (intOfNat cnat)) := by
+      have ih2 := ih a b (c - .one) h1 c_one_geq_zero csucc_geq2
+      exact ih2
+    have tt2 : (a + a * (intOfNat cnat) ≤ b + a * (intOfNat cnat)) := by
+      have h3 := lte_add_right a b (a * intOfNat cnat) h1
+      exact h3
+    have tt3 : (b + a * (intOfNat cnat) ≤ b + b * (intOfNat cnat)) := by
+      have h3 := lte_add_right (a * intOfNat cnat) (b * intOfNat cnat) b tt1
+      rw[int_add_commutes]
+      rw (occs := .pos [2]) [int_add_commutes]
+      exact h3
+    exact lte_trans (a + a * (intOfNat cnat)) (b + a * (intOfNat cnat)) (b + b * (intOfNat cnat)) tt2 tt3
+
 end MyInt
