@@ -130,13 +130,6 @@ theorem nothing_between_zero_one (a : Int) (h1 : a > .zero) (h2 : a < .one) : Fa
     have h7 := MyNat.lt_one_means_eq_zero k h4
     contradiction
 
-theorem lt_and_lte_means_false (a b: Int) (h1 : b ≤ a) (h2 : a < b ) : False :=
-  by
-    have h3 := lt_means_lte a b h2
-    have h4 := lt_means_neq a b h2
-    have h5 := lte_antisym a b h3 h1
-    contradiction
-
 theorem lt_means_lte_plus_one (a b : Int) (h1 : a < b) : a + .one ≤ b :=
   by
     rw[Int.one, intOfNat]
@@ -172,11 +165,6 @@ theorem gt_neg_one_means_geq_zero (a : Int) (h1 : a > Int.one.negate) : a ≥ .z
     have h2 := lt_means_lte_plus_one Int.one.negate a h1
     simp at h2
     exact h2
-
-theorem lte_nonneg_neg (a b : Int) (h1 : a ≥ .zero) (h2 : b < .zero) :
-  (a * b < .zero) :=
-  by
-    sorry
 
 theorem odd_neq_even (a b : Int) (h1: Int.Odd a) (h2: Int.Even b) :
     (a ≠ b) := by
@@ -252,7 +240,16 @@ theorem parity_iff_nat_odd (a : Nat) : Int.Odd (intOfNat a) ↔ MyNat.Nat.Odd a 
               exact hx2
 
           have hx4 : (.two * k < .zero) := by
-            have hx5 : Int.two ≥ .zero := rfl
+            have hx5 : Int.two > .zero := by
+              simp only [(· > · )]
+              simp only [(· < · )]
+              dsimp [Int.lt]
+              constructor
+              rfl
+              intro hx4
+              have hx5 := two_neq_zero
+              symm at hx4
+              contradiction
             exact lte_nonneg_neg Int.two k hx5 hx3
           have hx5 : (.two * k + .one < .one) := lt_add_right (.two * k)  .zero .one  hx4
           have hx6 : (.two * k + .two ≤ .one) := by
@@ -337,7 +334,22 @@ theorem parity_iff_nat_odd (a : Nat) : Int.Odd (intOfNat a) ↔ MyNat.Nat.Odd a 
 
 theorem parity_iff_negate_even (a : Int):  (Int.Even a) ↔ Int.Even a.negate :=
   by
-    sorry
+    dsimp [Int.Even, Int.Divides]
+    constructor
+    intro h1
+    obtain ⟨ k, hk ⟩ := h1
+    exists k.negate
+    rw[<-neg_expands_mul]
+    apply negate_both_sides
+    exact hk
+
+    intro h1
+    obtain ⟨ k, hk ⟩ := h1
+    exists k.negate
+    rw[<-neg_expands_mul]
+    apply unnegate_both
+    simp
+    exact hk
 
 theorem intofrep_plus (a b : IntRep) :
   (a + b = IntRep.mk (a.pos + b.pos) (a.neg + b.neg)) :=

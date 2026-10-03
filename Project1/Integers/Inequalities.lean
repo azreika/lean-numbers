@@ -978,6 +978,16 @@ theorem geq_one_means_minus_geq_zero (a : Int) (h1 : .one ≤ a) :
   rw[int_add_associates]
   simp
 
+@[simp] theorem negate_negate_is_pos (a: Int) :  a.negate.negate = a :=
+  by
+    exact negate_twice a
+
+theorem unnegate_both (a b : Int) (h1 : a.negate = b.negate ) : a = b :=
+  by
+    have h2 := negate_both_sides a.negate b.negate h1
+    simp at h2
+    exact h2
+
 theorem lte_cancel_right ( a b c : Int ) ( h1 : a + c ≤ b + c ) :
   (a ≤ b ) :=
   by
@@ -1086,5 +1096,28 @@ theorem int_lte_mul_left (a b c : Int) (h1 : a ≤ b) (h2: c ≥ .zero) :
       rw (occs := .pos [2]) [int_add_commutes]
       exact h3
     exact lte_trans (a + a * (intOfNat cnat)) (b + a * (intOfNat cnat)) (b + b * (intOfNat cnat)) tt2 tt3
+
+theorem lt_and_lte_means_false (a b: Int) (h1 : b ≤ a) (h2 : a < b ) : False :=
+  by
+    have h3 := lt_means_lte a b h2
+    have h4 := lt_means_neq a b h2
+    have h5 := lte_antisym a b h3 h1
+    contradiction
+
+theorem lte_nonneg_neg (a b : Int) (h1 : a > .zero) (h2 : b < .zero) :
+  (a * b < .zero) :=
+  by
+    by_cases a_neq_zero : a ≠ .zero
+    have a_nonneg := lt_means_lte Int.zero a h1
+    apply Classical.byContradiction
+    intro h3
+    have h4 := not_lt_means_flip_lte (a*b) Int.zero h3
+    have h5 := prod_geq_means_op_geq a b h4 a_nonneg a_neq_zero
+    exact lt_and_lte_means_false b Int.zero h5 h2
+    simp at a_neq_zero
+    rw[a_neq_zero]
+    have h2 := lt_means_neq Int.zero a h1
+    symm at h2
+    contradiction
 
 end MyInt
