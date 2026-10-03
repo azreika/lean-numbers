@@ -7,7 +7,7 @@ import Project1.Integers.Arithmetic
 import Project1.Integers.Integers
 import Project1.Integers.Gcd
 import Project1.Integers.Parity
-import Project1.Integers.Exercises
+import Project1.Integers.GcdProperties
 
 import Project1.IntReps.IntRep
 import Project1.IntReps.Arithmetic
