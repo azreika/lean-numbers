@@ -112,6 +112,74 @@ theorem parity_iff_nat_even (a : Nat) : Int.Even (intOfNat a) ↔ MyNat.Nat.Even
     rw[<-mul_mk_nat]
     exact eq_means_intofnat_eq a (MyNat.Nat.two * k) hk
 
+theorem nothing_between_zero_one (a : Int) (h1 : a > .zero) (h2 : a < .one) : False :=
+  by
+    have h3 := lt_means_lte Int.zero a h1
+    have h4 := nonneg_is_nat a h3
+    obtain ⟨ k, hk ⟩ := h4
+    rw[hk] at h1
+    rw[hk] at h2
+    rw[Int.one] at h2
+    rw[Int.zero] at h1
+    have h4 := intofnat_lt_equiv_rev k MyNat.Nat.one h2
+    have h5 := intofnat_lt_equiv_rev MyNat.Nat.zero k h1
+
+    have h6 := MyNat.lt_means_neq MyNat.Nat.zero k h5
+    symm at h6
+    have h7 := MyNat.lt_one_means_eq_zero k h4
+    contradiction
+
+theorem lt_and_lte_means_false (a b: Int) (h1 : b ≤ a) (h2 : a < b ) : False :=
+  by
+    have h3 := lt_means_lte a b h2
+    have h4 := lt_means_neq a b h2
+    have h5 := lte_antisym a b h3 h1
+    contradiction
+
+theorem lt_means_lte_plus_one (a b : Int) (h1 : a < b) : a + .one ≤ b :=
+  by
+    rw[Int.one, intOfNat]
+    have h2 := exists_intofrep a
+    obtain ⟨ ak, hak ⟩ := h2
+    have h3 := exists_intofrep b
+    obtain ⟨ bk, hbk ⟩ := h3
+
+    rw[hak, hbk] at h1
+    rw[hak, hbk]
+    rw[<-add_mk]
+    simp
+    apply intofrep_leq_rev
+    simp
+    have h2 := lt_means_lte (intOfRep ak) (intOfRep bk) h1
+    have h3 := intofrep_leq ak bk h2
+    have h4 := lt_means_neq (intOfRep ak) (intOfRep bk) h1
+    rw[add_associates]
+    rw (occs := .pos [2]) [add_commutes]
+    rw[<-MyNat.succ_add_one]
+    rw[MyNat.succ_add]
+    have h5 : (ak.pos + bk.neg ≠ bk.pos + ak.neg) :=
+      by
+        intro h5
+        have h6 := intofrep_eq_rev ak bk h5
+        contradiction
+    have h6 : (ak.pos + bk.neg < bk.pos + ak.neg) := And.intro h3 h5
+    have h7 := MyNat.lt_means_succ_lte (ak.pos + bk.neg) (bk.pos + ak.neg) h6
+    exact h7
+
+theorem gt_neg_one_means_geq_zero (a : Int) (h1 : a > Int.one.negate) : a ≥ .zero :=
+  by
+    have h2 := lt_means_lte_plus_one Int.one.negate a h1
+    simp at h2
+    exact h2
+
+theorem lte_nonneg_neg (a b : Int) (h1 : a ≥ .zero) (h2 : b < .zero) :
+  (a * b < .zero) :=
+  by
+    sorry
+
+theorem odd_neq_even (a b : Int) (h1: Int.Odd a) (h2: Int.Even b) :
+    (a ≠ b) := sorry
+
 theorem parity_iff_nat_odd (a : Nat) : Int.Odd (intOfNat a) ↔ MyNat.Nat.Odd a :=
   by
     constructor
@@ -153,13 +221,77 @@ theorem parity_iff_nat_odd (a : Nat) : Int.Odd (intOfNat a) ↔ MyNat.Nat.Odd a 
 
           have hx3 : (k < .zero) :=
             by
-              sorry
-          have hx4 : (k + Int.one.negate < Int.one.negate) := sorry
+              simp only [(· < · )]
+              dsimp [Int.lt]
+              constructor
+              apply Classical.byContradiction
+              intro hx3
+              have hx4 := not_lte_means_flip_lt k Int.zero hx3
+              have hx2 := not_lte_means_flip_lt Int.one k hx
+              exact nothing_between_zero_one k hx4 hx2
+              exact hx2
 
-          sorry
+          have hx4 : (.two * k < .zero) := by
+            have hx5 : Int.two ≥ .zero := rfl
+            exact lte_nonneg_neg Int.two k hx5 hx3
+          have hx5 : (.two * k + .one < .one) := lt_add_right (.two * k)  .zero .one  hx4
+          have hx6 : (.two * k + .two ≤ .one) := by
+            have hx7 := lt_means_lte_plus_one (.two * k + .one) (.one) hx5
+            rw[int_add_associates] at hx7
+            simp at hx7
+            exact hx7
+          have hx7 : (.two * k + .one ≤ .zero) := by
+            have hx7 := lte_add_right (Int.two * k + Int.two) Int.one Int.one.negate hx6
+            simp at hx7
+            rw[int_add_associates] at hx7
+            simp at hx7
+            exact hx7
+          have hx8 := lte_antisym (.two * k + .one) .zero hx7 nata_geq_zero
+          have hx9 : (Int.Odd (Int.two * k + Int.one)) := by
+            dsimp [Int.Odd]
+            exists k
+          have hx10 : (Int.Even (Int.zero)) := by
+            unfold Int.Even
+            unfold Int.Divides
+            exists Int.zero
+          have hx11 := odd_neq_even (Int.two *k + Int.one)  (Int.zero) hx9 hx10
+          contradiction
       simp at hk3
 
-      sorry
+      have hk4 : (k > Int.one.negate) :=
+        by
+          apply Classical.byContradiction
+          intro hk4
+          have hk5 := not_lt_means_flip_lte Int.one.negate k hk4
+          have hk6 := int_lte_mul_left k Int.one.negate Int.two hk5 rfl
+          rw[int_mul_commutes] at hk6
+          have hk7 := lte_add_right (Int.two * k) (Int.one.negate * Int.two) Int.one hk6
+          rw (occs := .pos [2]) [int_mul_commutes] at hk7
+          rw[<-negate_to_mul_neg_one] at hk7
+
+          have hk_rhs : (Int.two.negate + Int.one = Int.one.negate ) :=
+            by
+              apply add_right_cancel (c := Int.one.negate)
+              simp
+              have hn1 : (Int.two = Int.one + Int.one) := rfl
+              have hn2 := negate_both_sides Int.two (Int.one + Int.one) hn1
+              exact hn2
+          rw[hk_rhs] at hk7
+
+
+          have hk8 : (Int.two * k + Int.one < Int.zero) :=
+            by
+              simp only [(· < · )]
+              dsimp [Int.lt]
+              constructor
+              exact lte_trans (Int.two * k + Int.one) Int.one.negate Int.zero  hk7 rfl
+              intro hk8
+              rw[hk8] at hk7
+              contradiction
+
+          exact lt_and_lte_means_false (Int.two * k + Int.one) Int.zero nata_geq_zero  hk8
+
+      exact gt_neg_one_means_geq_zero k hk4
     have exists_knat := nonneg_is_nat k hk2
     obtain ⟨knat, hknat⟩ := exists_knat
     exists knat
@@ -191,8 +323,6 @@ theorem intofrep_plus (a b : IntRep) :
   (a + b = IntRep.mk (a.pos + b.pos) (a.neg + b.neg)) :=
     by
       rfl
-
-
 
 theorem one_minus_two_is_neg_one : (Int.one - Int.two = Int.one.negate) :=
   by

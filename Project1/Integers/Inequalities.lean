@@ -805,6 +805,9 @@ theorem lte_add_right (a b c: Int) (h1 : a ≤ b) : (a + c ≤ b + c) :=
     rw (occs := .pos [2]) [add_commutes]
     exact h2
 
+theorem lt_add_right (a b c: Int) (h1 : a < b) : (a + c < b + c) :=
+  sorry
+
 theorem integer_gaps (a b : Int) (h1 : a ≤ b) :
   ∃ (m : Int), (.zero ≤ m) ∧ (b = a + m) :=
   by
@@ -956,6 +959,14 @@ theorem geq_one_means_minus_geq_zero (a : Int) (h1 : .one ≤ a) :
   rw[<-add_associates] at h1
   have h2 := MyNat.lte_cancel_right (a + c) (d + e) b h1
   exact h2
+
+@[simp] theorem one_plus_one_is_two : (Int.one + Int.one = Int.two) := by
+  rfl
+
+@[simp] theorem two_minus_one_is_one1 : (Int.two + Int.one.negate = Int.one) := by
+  apply add_right_cancel (c:=Int.one)
+  rw[int_add_associates]
+  simp
 
 theorem lte_cancel_right ( a b c : Int ) ( h1 : a + c ≤ b + c ) :
   (a ≤ b ) :=

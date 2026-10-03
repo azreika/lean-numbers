@@ -21,6 +21,9 @@ theorem one_mul(a : Nat):
 instance : LE Nat where
   le := Nat.lte
 
+instance : LT Nat where
+  lt := Nat.lt
+
 theorem zero_is_min ( a : Nat ) (h1 : Nat.lte a .zero ) :
   (a = .zero) :=
   by

@@ -892,4 +892,34 @@ theorem mul_nonzero_lte (a b : Nat) (h1 : b ≠ .zero) :
       have h4 := add_lte_inequalities Nat.one b a (b*a) h3 h2
       exact h4
 
+theorem lt_one_means_eq_zero (a : Nat) (h1 : a < .one) : (a = .zero) :=
+  by
+    induction a with
+    | zero =>
+    rfl
+    | succ a ih =>
+    rw[Nat.one] at h1
+    have h2 : a < Nat.zero := by
+      simp only [(· < ·)]
+      dsimp [Nat.lt]
+      constructor
+      simp only [(· < ·)] at h1
+      dsimp [Nat.lt] at h1
+      have h2 := h1.left
+      have h3 := h1.right
+      exact h2
+
+      intro h2
+      rw[h2] at h1
+      have h3 := lt_means_neq Nat.zero.succ Nat.zero.succ  h1
+      contradiction
+
+    have h3 := gte_zero a
+    simp only [(· < ·)] at h2
+    dsimp [Nat.lt] at h2
+    have h4 := h2.left
+    have h5 := h2.right
+    have h6 := lte_antisym a Nat.zero h4 h3
+    contradiction
+
 end MyNat
