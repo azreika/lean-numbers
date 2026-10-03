@@ -494,7 +494,6 @@ theorem even_means_two_divides (a : Int ) (h1 : Int.Even a) : Int.two.Divides a 
     unfold Int.Even at h1
     exact h1
 
-
 theorem root2_irrational_1 :
   (¬ ∃ (a b : Int), (Int.gcd a b = Int.one) ∧ .two * b * b = a * a) :=
   by
