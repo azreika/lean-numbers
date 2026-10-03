@@ -1,6 +1,7 @@
 import Project1.Integers.Inequalities
 import Project1.Integers.Arithmetic
 import Project1.Nat.Parity
+import Project1.Integers.Gcd
 
 
 namespace MyInt
@@ -178,7 +179,26 @@ theorem lte_nonneg_neg (a b : Int) (h1 : a ≥ .zero) (h2 : b < .zero) :
     sorry
 
 theorem odd_neq_even (a b : Int) (h1: Int.Odd a) (h2: Int.Even b) :
-    (a ≠ b) := sorry
+    (a ≠ b) := by
+      dsimp [Int.Odd] at h1
+      dsimp [Int.Even, Int.Divides] at h2
+      obtain ⟨ k, hk ⟩ := h1
+      obtain ⟨ m, hm ⟩ := h2
+      intro a_eq_b
+      rw[hm, hk] at a_eq_b
+      have h3 := add_right_congr (Int.two * k + Int.one) (Int.two * m) (Int.two * k).negate a_eq_b
+      rw[int_add_commutes] at h3
+      rw[<-int_add_associates] at h3
+      simp at h3
+      rw[neg_expands_mul] at h3
+      rw[<-mul_add_distributes] at h3
+      have h4 : (Int.two.Divides Int.one) :=
+        by
+          unfold Int.Divides
+          exists (m + k.negate)
+      have h5 := one_is_unit Int.two h4 zero_lt_two
+      have h6 := int_two_neq_one
+      contradiction
 
 theorem parity_iff_nat_odd (a : Nat) : Int.Odd (intOfNat a) ↔ MyNat.Nat.Odd a :=
   by
@@ -359,7 +379,6 @@ theorem parity_iff_negate_odd (a : Int):  (Int.Odd a) ↔ Int.Odd a.negate :=
 
     rw[one_minus_two_is_neg_one]
 
-
     sorry
 
     sorry
@@ -396,8 +415,11 @@ theorem not_even_means_odd (a : Int ) (h1 : ¬ Int.Even a) : Int.Odd a :=
 
 theorem even_means_not_odd (a : Int) : (Int.Even a) →  (¬ Int.Odd a ) :=
   by
-
-    sorry
+    intro h1
+    have h2 : (a = a) := rfl
+    intro h3
+    have h4 : (a ≠ a) := odd_neq_even a a h3 h1
+    contradiction
 
 theorem even_square_means_even (a : Int) (h1 : Int.Even (a*a)) : (Int.Even a) :=
   by
@@ -419,5 +441,59 @@ theorem even_means_two_divides (a : Int ) (h1 : Int.Even a) : Int.two.Divides a 
     unfold Int.Even at h1
     exact h1
 
+
+theorem root2_irrational_1 :
+  (¬ ∃ (a b : Int), (Int.gcd a b = Int.one) ∧ .two * b * b = a * a) :=
+  by
+    intro h
+    obtain ⟨ a, ha ⟩ := h
+    obtain ⟨ b, hb ⟩ := ha
+    have h1 := hb.left
+    have h2 := hb.right
+
+    have h3 : (Int.two.Divides (a * a)) := by
+      unfold Int.Divides
+      exists (b * b)
+      rw[<-int_mul_associates]
+      exact h2.symm
+
+    have h4 : (Int.Even (a * a)) := by
+      unfold Int.Even
+      exact h3
+
+    have h5 : (Int.Even a) := even_square_means_even a h4
+
+    have h6 : (∃ (k : Int), a = .two * k) := even_is_mult_of_two a h5
+
+    obtain ⟨ k, hk ⟩ := h6
+
+    rw[hk] at h2
+    rw[int_mul_associates] at h2
+    rw[int_mul_associates] at h2
+
+    have h7 := mul_left_divides (b * b) (k * (.two * k)) .two h2
+    rw[<-int_mul_associates] at h7
+    rw[int_mul_commutes] at h7
+    rw[int_mul_associates] at h7
+    rw (occs := .pos [2]) [int_mul_commutes] at h7
+    rw[int_mul_associates] at h7
+
+    have h8 : (Int.Even (b * b)) := by
+      unfold Int.Even
+      exists (k * k)
+      have h9 := h7 two_neq_zero
+      rw[h9]
+
+    have hbeven := even_square_means_even b h8
+
+    have twoa : (Int.two.Divides a) := even_means_two_divides a h5
+    have twob : (Int.two.Divides b) := even_means_two_divides b hbeven
+
+    have h9 : (Int.two.Divides (Int.gcd a b )) := common_div_divides_gcd a b .two twoa twob
+
+    rw[h1] at h9
+    have h10 : (Int.two = Int.one) := one_is_unit .two h9 zero_lt_two
+    have h12 := And.intro h10 int_two_neq_one
+    simp at h12
 
 end MyInt

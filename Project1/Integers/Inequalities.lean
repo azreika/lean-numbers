@@ -806,7 +806,17 @@ theorem lte_add_right (a b c: Int) (h1 : a ≤ b) : (a + c ≤ b + c) :=
     exact h2
 
 theorem lt_add_right (a b c: Int) (h1 : a < b) : (a + c < b + c) :=
-  sorry
+  by
+    simp only [(· < · )]
+    dsimp [Int.lt]
+    constructor
+    apply lte_add_right
+    exact lt_means_lte a b h1
+
+    intro h2
+    have h3 : a = b := add_right_cancel a b c h2
+    have h4 := lt_means_neq a b h1
+    contradiction
 
 theorem integer_gaps (a b : Int) (h1 : a ≤ b) :
   ∃ (m : Int), (.zero ≤ m) ∧ (b = a + m) :=
