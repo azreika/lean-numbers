@@ -374,6 +374,27 @@ theorem one_minus_two_is_neg_one : (Int.one - Int.two = Int.one.negate) :=
     rw[<-MyNat.add_one]
     rw[<-MyNat.Nat.two]
 
+theorem int_neg_expands (a b : Int) : a.negate + b.negate = (a+b).negate :=
+  by
+    have h1 := exists_intofrep a
+    have h2 := exists_intofrep b
+
+    obtain ⟨ ak, hak ⟩ := h1
+    obtain ⟨ bk, hkb ⟩ := h2
+    rw[hak, hkb]
+    rw[<-negate_mk]
+    rw[<-negate_mk]
+    rw[<-add_mk]
+    simp
+    cases ak with
+    | mk akpos akneg =>
+    cases bk with
+    | mk bkpos bkneg =>
+    rw[<-add_mk]
+    simp
+    dsimp [IntRep.negate]
+    rfl
+
 theorem parity_iff_negate_odd (a : Int):  (Int.Odd a) ↔ Int.Odd a.negate :=
   by
     constructor
@@ -382,6 +403,7 @@ theorem parity_iff_negate_odd (a : Int):  (Int.Odd a) ↔ Int.Odd a.negate :=
     dsimp [Int.Odd] at a_odd
     dsimp [Int.Odd]
     obtain ⟨ k, hk ⟩ := a_odd
+
     exists (k.negate + Int.one.negate)
     rw[mul_add_distributes]
     rw[<-negate_to_mul_neg_one]
@@ -390,10 +412,29 @@ theorem parity_iff_negate_odd (a : Int):  (Int.Odd a) ↔ Int.Odd a.negate :=
     rw[<-sub_is_plus_neg]
 
     rw[one_minus_two_is_neg_one]
+    rw[<-neg_expands_mul]
+    rw[int_neg_expands]
+    apply negate_both_sides
+    exact hk
 
-    sorry
+    intro a_odd
+    dsimp [Int.Odd] at a_odd
+    dsimp [Int.Odd]
+    obtain ⟨ k, hk ⟩ := a_odd
 
-    sorry
+    exists (k.negate + Int.one.negate)
+    rw[mul_add_distributes]
+    rw[<-negate_to_mul_neg_one]
+    rw[int_add_associates]
+    rw (occs := .pos [2]) [int_add_commutes]
+    rw[<-sub_is_plus_neg]
+
+    rw[one_minus_two_is_neg_one]
+    rw[<-neg_expands_mul]
+    rw[int_neg_expands]
+    apply unnegate_both
+    simp
+    exact hk
 
 theorem even_or_odd (a : Int) : (Int.Even a ∨ Int.Odd a) :=
   by
