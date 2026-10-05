@@ -74,7 +74,11 @@ theorem negate_twice (a : Int) : (a.negate.negate = a) :=
   have h2 := MyNat.lte_cancel_right (a + c) (d + e) b h1
   exact h2
 
-@[simp] theorem one_plus_one_is_two : (Int.one + Int.one = Int.two) := by
+@[simp] theorem one_plus_one_is_two_1 : (Int.one + Int.one = Int.two) := by
+  rfl
+
+@[simp] theorem one_plus_one_is_two_2 (a : Int) : ((a +Int.one) + Int.one = a + Int.two) := by
+  rw[int_add_associates]
   rfl
 
 @[simp] theorem two_minus_one_is_one1 : (Int.two + Int.one.negate = Int.one) := by
@@ -85,5 +89,9 @@ theorem negate_twice (a : Int) : (a.negate.negate = a) :=
 @[simp] theorem negate_negate_is_pos (a: Int) :  a.negate.negate = a :=
   by
     exact negate_twice a
+
+@[simp] theorem zero_neg_is_zero : Int.zero.negate = Int.zero :=
+  by
+    rfl
 
 end MyInt

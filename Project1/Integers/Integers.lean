@@ -400,8 +400,6 @@ def Int.Even ( n : Int ) : Prop :=
 def Int.Odd ( n : Int ) : Prop :=
   ∃ k : Int, n = two * k + one
 
-
-
 theorem intofrep_eq_means_equiv ( a b : IntRep ) (h1: intOfRep a = intOfRep b):
   (a ≈ b) := by exact Quotient.exact h1
 
