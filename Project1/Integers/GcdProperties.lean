@@ -8,7 +8,7 @@ namespace MyInt
 def Int.Unit (a : Int) : Prop :=
   a.Divides .one
 
-def Int.coprime (a b : Int) : Prop :=
+def Int.Coprime (a b : Int) : Prop :=
   Int.gcd a b = .one
 
 theorem one_is_unit_prop : Int.Unit .one :=
@@ -417,19 +417,88 @@ theorem neg_one_lt_zero : Int.one.negate < .zero := by
   simp at h2
   exact h2
 
+theorem div_transitive (a b c : Int) (h1: a.Divides b) (h2 : b.Divides c) : a.Divides c := by
+  dsimp [Int.Divides]
+  dsimp [Int.Divides] at h1
+  dsimp [Int.Divides] at h2
+  obtain ⟨ k1, hk1 ⟩ := h1
+  obtain ⟨ k2, hk2 ⟩ := h2
+  rw[hk1] at hk2
+  exists (k1 * k2)
+  rw[<-int_mul_associates]
+  exact hk2
+
 theorem divs_of_gcd_div_ab (a b d c : Int) (h1 : d = Int.gcd a b) (h2 : c.Divides d) :
-  (c.Divides a ∧ c.Divides b) := by sorry
+  (c.Divides a ∧ c.Divides b) :=
+  by
+    have hdiv := gcd_means_divides a b d h1.symm
+    constructor
+    exact div_transitive c d a h2 hdiv.left
+    exact div_transitive c d b h2 hdiv.right
 
 theorem lt_both_impossible (a b : Int) (h1: a < b) (h2 : b < a) : False :=
   by
-    sorry
+    have h3 := lt_means_neq a b h1
+    have h4 := lt_means_lte a b h1
+    have h5 := lt_means_lte b a h2
+    have h6 := lte_antisym a b h4 h5
+    contradiction
 
-theorem prod_of_coprime (d a b : Int) (h1 : d.Divides (a * b)) (h2 : (Int.coprime d b)) :
-  d.Divides a := by
-  sorry
 
 theorem gcd_is_min_poslin ( a b d : Int) (h1 : d = Int.gcd a b) :
   is_min d (PosLinearCombinations a b) := by sorry
+
+theorem in_poslin_means_poslin ( a b x : Int) (h1: x ∈ PosLinearCombinations a b) :
+  ∃ (m n : Int), a * m + b * n = x := by
+    simp only [(· ∈ · )] at h1
+    dsimp [PosLinearCombinations] at h1
+    have h2 := h1.left
+    simp only [(· ∈ · )] at h2
+    dsimp [LinearCombinations] at h2
+    obtain ⟨ m, hm ⟩ := h2
+    obtain ⟨ n, hn ⟩ := hm
+    exists (m)
+    exists (n)
+    exact hn.symm
+
+theorem coprime_means_poslin_one (a b : Int) (h1: Int.Coprime a b) :
+  ∃ (m n : Int), a * m + b * n = .one := by
+    dsimp [Int.Coprime] at h1
+    have h2 := gcd_is_min_poslin a b Int.one h1.symm
+    dsimp [is_min] at h2
+    have h3 := h2.left
+    exact in_poslin_means_poslin a b Int.one h3
+
+theorem prod_of_coprime (d a b : Int) (h1 : d.Divides (a * b)) (h2 : (Int.Coprime d b)) :
+  d.Divides a :=
+  by
+    have d_div_ab := h1
+    have h5 := coprime_means_poslin_one d b h2
+    obtain ⟨ m, hm ⟩ := h5
+    obtain ⟨ n, hn ⟩ := hm
+
+    dsimp [Int.Divides] at h1
+    obtain ⟨ k, hk ⟩ := h1
+    have hn2 := mul_left_congr (d * m + b * n) (Int.one ) a hn
+    rw[mul_add_distributes] at hn2
+    simp at hn2
+    have d_term1 : d.Divides (a * (d * m)) := by
+      dsimp [Int.Divides]
+      exists (a * m)
+      rw[<-int_mul_associates]
+      rw[int_mul_commutes]
+      rw (occs := .pos [2] ) [int_mul_commutes]
+      rw (occs := .pos [2] ) [<-int_mul_associates]
+      rw[int_mul_commutes]
+    have d_term2 : d.Divides (a * (b * n)) := by
+      rw[<-int_mul_associates]
+      dsimp [Int.Divides]
+      exists (k * n)
+      rw[<-int_mul_associates]
+      rw[hk]
+    have d_sum := divides_sum d (a * (d * m)) (a * (b* n)) d_term1 d_term2
+    rw[hn2] at d_sum
+    exact d_sum
 
 theorem pos_divisors_of_two ( d : Int ) (h1 : d > .zero) (h2 : d.Divides .two) :
   d = .one ∨ d = .two :=
@@ -471,7 +540,7 @@ theorem chap1_q10 (u v : Int) (h1 : Int.gcd u v = .one) :
     have h12 : d = .one ∨ d = .two := sorry
     exact h12
 
-    have coprime_u : d.coprime u := sorry
+    have coprime_u : d.Coprime u := sorry
     have h9 : d.Divides Int.two := prod_of_coprime d Int.two u h7 coprime_u
     have h11 : d > .zero := sorry
 
