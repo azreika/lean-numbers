@@ -1,6 +1,6 @@
 import Project1.Integers.Inequalities
 import Project1.Integers.Arithmetic
-import Project1.Nat.Parity
+import Project1.Integers.Parity
 import Project1.Integers.Gcd
 
 namespace MyInt
@@ -35,8 +35,6 @@ theorem zero_not_divisor (a b : Int) (h1 : a.Divides b)  (h2 : b ≠ .zero): a �
     obtain ⟨ k, hk ⟩ := h1
     simp at hk
     contradiction
-
-theorem intofnat_geq_zero (a : Nat) : intOfNat a ≥ .zero := rfl
 
 theorem one_neq_zero : Int.one ≠ Int.zero := by
   intro h1
