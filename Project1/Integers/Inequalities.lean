@@ -1,6 +1,7 @@
 import Project1.Integers.Arithmetic
 import Project1.IntReps.Inequalities
 import Project1.Nat.Properties
+import Project1.Integers.Simps
 
 import Std
 
@@ -118,15 +119,11 @@ theorem intofnat_eq (a b : Nat) (h1 : intOfNat a = intOfNat b) :
         dsimp [intOfNat] at h1
         have h2 := intofrep_eq (IntRep.mk .zero .zero) (IntRep.mk b .zero) h1
         simp at h2
-        rw[MyNat.zero_add] at h2
-        rw[MyNat.zero_add] at h2
         exact h2
     | succ a ih =>
         dsimp [intOfNat] at h1
         have h2 := intofrep_eq (IntRep.mk a.succ .zero) (IntRep.mk b .zero) h1
         simp at h2
-        rw[MyNat.zero_add] at h2
-        rw[MyNat.add_zero] at h2
         exact h2
 
 theorem two_neq_zero : (Int.two ≠ .zero) :=
@@ -187,8 +184,6 @@ theorem intofnat_lte_equiv (a b : Nat) (h1 : a ≤ b) :
     unfold intOfNat
     apply intofrep_leq_rev
     simp
-    rw[MyNat.add_zero]
-    rw[MyNat.add_zero]
     exact h1
 
 theorem lte_antisym ( a b : Int ) (h1 : Int.lte a b ) (h2 : Int.lte b a) :
@@ -423,7 +418,6 @@ theorem intofnat_div_means_div ( a b : Nat ) (h1: (intOfNat a).Divides (intOfNat
     rw[MyNat.add_zero] at hk
     have hk2 := intofrep_eq (IntRep.mk b MyNat.Nat.zero) (IntRep.mk (a*mpos) (a*mneg)) hk
     simp at hk2
-    rw[MyNat.zero_add] at hk2
     have hh0 : ((a*mneg) ≤ (a*mpos)) :=
       by
         have hk3 := intofrep_eq (IntRep.mk b MyNat.Nat.zero) (IntRep.mk (a*mpos) (a*mneg)) hk
@@ -498,14 +492,12 @@ theorem intofnat_lt_equiv (a b : Nat) (h1 : a.lt b) :
 
     apply intofrep_leq_rev
     simp
-    rw[MyNat.add_zero, MyNat.add_zero]
     dsimp [MyNat.Nat.lt] at h1
     exact h1.left
 
     intro h2
     have h3 := intofrep_eq (IntRep.mk a MyNat.Nat.zero) (IntRep.mk b MyNat.Nat.zero) h2
     simp at h3
-    rw[MyNat.add_zero, MyNat.zero_add] at h3
     have h4 := MyNat.lt_means_neq a b h1
     contradiction
 
@@ -513,8 +505,6 @@ theorem intofnat_eq_rev (a b : Nat) (h1 : a = b) : intOfNat a = intOfNat b :=
   by
     dsimp [intOfNat]
     apply intofrep_eq_rev
-    simp
-    rw[MyNat.add_zero, MyNat.add_zero]
     exact h1
 
 theorem intofnat_lt_equiv_rev (a b : Nat) (h1 : intOfNat a < intOfNat b) :
@@ -530,7 +520,6 @@ theorem intofnat_lt_equiv_rev (a b : Nat) (h1 : intOfNat a < intOfNat b) :
     dsimp [intOfNat] at h2
     have h4 := intofrep_leq (IntRep.mk a MyNat.Nat.zero) (IntRep.mk b MyNat.Nat.zero) h2
     simp at h4
-    rw[MyNat.add_zero, MyNat.add_zero] at h4
     exact h4
 
     intro h4
@@ -714,15 +703,6 @@ theorem negate_both_sides (a b : Int) (h1 : a = b) :
   by
     rw[h1]
 
-theorem negate_twice (a : Int) : (a.negate.negate = a) :=
-  by
-    refine Quotient.inductionOn a ?_
-    intro a
-    rw[<-intOfRep]
-    rw[<-negate_mk]
-    rw[<-negate_mk]
-    rfl
-
 theorem unfold_lt (a b : Int) (h1 : a < b) : a ≤ b ∧ a ≠ b := by
   exact h1
 
@@ -747,7 +727,6 @@ theorem negative_zero_lte_from_lt ( a : Int) (h1 : a < .zero) :
     rw[intOfNat]
     apply intofrep_leq_rev
     simp
-    rw[MyNat.zero_add, MyNat.add_zero]
     cases k with
     | mk kpos kneg =>
       dsimp [IntRep.negate]
@@ -755,7 +734,6 @@ theorem negative_zero_lte_from_lt ( a : Int) (h1 : a < .zero) :
       rw[Int.zero, intOfNat] at h2
       have h3 := intofrep_leq (IntRep.mk kpos kneg) (IntRep.mk MyNat.Nat.zero MyNat.Nat.zero) h2
       simp at h3
-      rw[MyNat.add_zero, MyNat.zero_add] at h3
       exact h3
 
     intro h4
@@ -864,7 +842,6 @@ theorem lte_less_sum (a b : Int) (h1 : b ≥ .zero) :
     rw[Int.zero, intOfNat] at h1
     have h5 := intofrep_leq (IntRep.mk MyNat.Nat.zero MyNat.Nat.zero) (IntRep.mk kbpos kbneg) h1
     simp at h5
-    rw[MyNat.zero_add, MyNat.add_zero] at h5
     exact h5
 
 theorem lt_plus_pos_means_lt (a b c: Int) (h1: a ≥ c) (h2 : b > .zero) :
@@ -908,79 +885,6 @@ theorem geq_one_means_minus_geq_zero (a : Int) (h1 : .one ≤ a) :
     rw[inverse_nat] at h2
     rw[sub_is_plus_neg]
     exact h2
-
-@[simp] theorem zero_add_nat_simp (a : Nat) : (.zero + a = a) := by
-  rw[MyNat.zero_add]
-
-@[simp] theorem add_zero_nat_simp (a : Nat) : (a + .zero = a) := by
-  rw[MyNat.add_zero]
-
-@[simp] theorem add_zero_int_simp (a : Int) : (.zero + a = a) := by
-  rw[int_zero_add]
-
-@[simp] theorem zero_add_int_simp (a : Int) : (a + .zero = a) := by
-  rw[int_add_zero]
-
-@[simp] theorem inverse_nat_simp1 (a : Int) : (a + a.negate = .zero) := by
-  rw[inverse_nat]
-
-@[simp] theorem inverse_nat_simp2 (a : Int) : (a.negate + a = .zero) := by
-  rw[inverse_nat2]
-
-@[simp] theorem inverse_nat_simp3 (a b : Int) : (b + a) + a.negate = b := by
-  rw[int_add_associates]
-  simp
-
-@[simp] theorem inverse_nat_simp4 (a b : Int) : (b + a.negate) + a = b := by
-  rw[int_add_associates]
-  simp
-
-@[simp] theorem int_mul_one_simp (a : Int) : (a * .one = a) := by
-  rw[int_mul_one]
-
-@[simp] theorem int_one_mul_simp (a : Int) : (.one * a = a) := by
-  rw[int_mul_commutes]
-  rw[int_mul_one]
-
-@[simp] theorem int_zero_mul_simp (a : Int) : (.zero * a = .zero) := by
-  rw[int_mul_commutes]
-  rw[int_mul_zero]
-
-@[simp] theorem int_mul_zero_simp (a : Int) : (a * .zero = .zero) := by
-  rw[int_mul_zero]
-
-@[simp] theorem intrep_add_together (a b : IntRep) :
-  (a + b) = IntRep.mk (a.pos + b.pos) (a.neg + b.neg) :=
-  by
-    cases a with
-    | mk apos aneg =>
-    cases b with
-    | mk bpos bneg =>
-    simp
-    rfl
-
-@[simp] theorem nat_lte_cancel_right1 (a b c d e : Nat) (h1 : a + b + c ≤ d + b + e ) :
-  (a + c ≤ d + e ):= by
-  rw[add_associates] at h1
-  rw[add_associates] at h1
-  rw (occs := .pos [2]) [add_commutes] at h1
-  rw (occs := .pos [4]) [add_commutes] at h1
-  rw[<-add_associates] at h1
-  rw[<-add_associates] at h1
-  have h2 := MyNat.lte_cancel_right (a + c) (d + e) b h1
-  exact h2
-
-@[simp] theorem one_plus_one_is_two : (Int.one + Int.one = Int.two) := by
-  rfl
-
-@[simp] theorem two_minus_one_is_one1 : (Int.two + Int.one.negate = Int.one) := by
-  apply add_right_cancel (c:=Int.one)
-  rw[int_add_associates]
-  simp
-
-@[simp] theorem negate_negate_is_pos (a: Int) :  a.negate.negate = a :=
-  by
-    exact negate_twice a
 
 theorem unnegate_both (a b : Int) (h1 : a.negate = b.negate ) : a = b :=
   by
