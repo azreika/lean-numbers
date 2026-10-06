@@ -100,10 +100,6 @@ theorem one_lt_two : Int.one < Int.two := by
   have h2 := nat_cancel_both_sides MyNat.Nat.one MyNat.Nat.one h1
   contradiction
 
-theorem neq_sym (a b :Int) (h1 : ¬ (a = b)) : a ≠ b := by
-  simp
-  exact h1
-
 
 theorem div_means_neg_div ( a b : Int) (h1 : a.Divides b ) : a.negate.Divides b :=
   by
@@ -446,7 +442,9 @@ theorem lt_both_impossible (a b : Int) (h1: a < b) (h2 : b < a) : False :=
 
 
 theorem gcd_is_min_poslin ( a b d : Int) (h1 : d = Int.gcd a b) :
-  is_min d (PosLinearCombinations a b) := by sorry
+  is_min d (PosLinearCombinations a b) :=
+    by
+      sorry
 
 theorem in_poslin_means_poslin ( a b x : Int) (h1: x ∈ PosLinearCombinations a b) :
   ∃ (m n : Int), a * m + b * n = x := by

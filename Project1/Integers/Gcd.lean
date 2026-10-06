@@ -183,37 +183,167 @@ theorem gt_zero_plus_gte_zero (a b : Int) (h1: a > .zero) (h2 : b ≥ .zero) :
     rw[int_add_commutes] at hh
     exact lt_means_neq Int.zero (a + b) hh
 
+theorem neq_sym (a b :Int) (h1 : ¬ (a = b)) : a ≠ b := by
+  simp
+  exact h1
+theorem pos_lin_positive (a b : Int) :
+  ∀ (x : Int), x ∈ (PosLinearCombinations a b) → x ≥ .zero := by
+    intro x
+    simp only [(· ∈ · )]
+    unfold PosLinearCombinations
+    intro hh
+    have hh2 := hh.right
+    exact lt_means_lte Int.zero x hh2
+
+theorem pos_lin_nonempty_pos ( a b : Int) (ha : a ≥ .zero) (hbz : b > .zero) :
+  is_nonempty (PosLinearCombinations a b) := by
+    unfold is_nonempty
+    exists (a + b)
+    simp only [(· ∈ · )]
+    unfold PosLinearCombinations
+    unfold LinearCombinations
+    constructor
+    simp only [(· ∈ · )]
+    exists Int.one
+    exists Int.one
+    simp
+    have hx : (b + a > .zero) := gt_zero_plus_gte_zero b a hbz ha
+    rw[int_add_commutes] at hx
+    exact hx
+
+theorem pos_lin_has_min_pos (a b : Int) (ha : a ≥ .zero) (hbz : b > .zero) :
+  has_min (PosLinearCombinations a b) := by
+    have nonempty := pos_lin_nonempty_pos a b ha hbz
+    have all_pos := pos_lin_positive a b
+    exact pos_nonempty_has_min (PosLinearCombinations a b) nonempty all_pos
+
+theorem min_d_symm_poslin ( a b d : Int )  (hd : is_min d (PosLinearCombinations a b)) : is_min d (PosLinearCombinations b a) :=
+  by
+    dsimp [is_min] at hd
+    dsimp [is_min]
+    constructor
+    have hd1 := hd.left
+    have hflip := expand_poscom_set d a b
+    rw[hflip] at hd1
+    have hflip2 := expand_poscom_set d b a
+    rw[hflip2]
+    obtain ⟨ m, hm ⟩ := hd1.left
+    obtain ⟨ n, hn ⟩ := hm
+    constructor
+    exists n
+    exists m
+    rw[int_add_commutes]
+    exact hn
+
+    exact hd1.right
+
+    intro x
+    intro hx
+    have hxx : x ∈ (PosLinearCombinations a b) := by
+      have hflip := expand_poscom_set x a b
+      have hflip2 := expand_poscom_set x b a
+      rw[hflip]
+      rw[hflip2] at hx
+      constructor
+      obtain ⟨ m, hm ⟩ := hx.left
+      obtain ⟨ n, hn ⟩ := hm
+      exists n
+      exists m
+      rw[int_add_commutes]
+      exact hn
+
+      exact hx.right
+    exact hd.right x hxx
+
+theorem exists_gcd_pos_lemma (a b d : Int) (ha : a ≥ .zero)
+  (hd : is_min d (PosLinearCombinations a b)) : d.Divides a :=
+  by
+    let pos_com_set : Set Int := PosLinearCombinations a b
+    have d_in_poscom : (d ∈ pos_com_set) := by
+      unfold is_min at hd
+      exact hd.left
+    have d_gt_zero : (.zero < d) := by
+      simp only [(· ∈ · )] at d_in_poscom
+      unfold pos_com_set at d_in_poscom
+      unfold PosLinearCombinations at d_in_poscom
+      exact d_in_poscom.right
+    have hh := euclidean a d ha d_gt_zero
+    obtain ⟨ r, hr ⟩ := hh
+    obtain ⟨ q, hq ⟩ := hr
+    have hq1 := hq.left
+    have hq2 := hq.right.left
+    have hq3 := hq.right.right
+
+    have ham_d : (∃ (m n : Int ), d = a * m + b * n) := by
+      unfold pos_com_set at d_in_poscom
+      have hh := expand_poscom_set d a b
+      rw[hh] at d_in_poscom
+      exact d_in_poscom.left
+
+    obtain ⟨ m, hm ⟩ := ham_d
+    obtain ⟨ n, hn ⟩ := hm
+
+    have r_eq_zero : (r = .zero) :=
+      by
+        apply Classical.byContradiction
+        intro r_neq_zero
+        have h3 := (expand_poscom_set r a b)
+        have ham_r : (∃ (m n : Int ), r = a * m + b * n) :=
+          by
+            exists (Int.one.negate + q * m)
+            exists (q * n)
+            rw[mul_add_distributes]
+            simp
+            apply add_right_cancel (c := a)
+            rw[hq1]
+            rw[sub_is_plus_neg]
+            rw[int_add_associates]
+            simp
+            rw[int_add_commutes]
+            rw[<-int_add_associates]
+            rw[<-int_add_associates]
+            simp
+            rw (occs := .pos [2])[int_mul_commutes]
+            rw (occs := .pos [4])[int_mul_commutes]
+            rw[int_mul_associates]
+            rw[int_mul_associates]
+            rw[<-mul_add_distributes]
+            apply mul_left_congr
+            rw[int_mul_commutes]
+            rw (occs := .pos [2] )[int_mul_commutes]
+            exact hn
+        have r_gt_zero : .zero < r := And.intro hq2 (neq_sym r Int.zero r_neq_zero).symm
+        have r_in_a : (r ∈ pos_com_set) :=
+          by
+            unfold pos_com_set
+            have hand := And.intro ham_r r_gt_zero
+            rw[<-h3] at hand
+            exact hand
+        have d_lte_r := hd.right r r_in_a
+        have r_lte_d := lt_means_lte r d hq3
+        have r_eq_d := lte_antisym r d r_lte_d d_lte_r
+        have d_neq_r := (lt_means_neq r d hq3)
+        contradiction
+
+    unfold Int.Divides
+    exists q
+    rw[r_eq_zero] at hq1
+    have hh2 : (.zero + a) = (q * d - a) + a := add_right_congr Int.zero (q * d - a) a hq1
+    rw[int_zero_add] at hh2
+    rw[sub_is_plus_neg] at hh2
+    rw[int_add_associates] at hh2
+    rw (occs := .pos [2]) [int_add_commutes] at hh2
+    rw[inverse_nat] at hh2
+    rw[int_add_zero] at hh2
+    rw[int_mul_commutes] at hh2
+    exact hh2
+
 theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hbz : b > .zero) :
   ∃ (d : Int), IsGcd a b d :=
   by
     have hb : (b ≥ .zero) := lt_means_lte .zero b hbz
     let pos_com_set : Set Int := PosLinearCombinations a b
-    have h_has_element : (is_nonempty pos_com_set) := by
-      unfold is_nonempty
-      exists (a + b)
-      simp only [(· ∈ · )]
-      unfold pos_com_set
-      unfold PosLinearCombinations
-      unfold LinearCombinations
-      constructor
-      simp only [(· ∈ · )]
-      exists Int.one
-      exists Int.one
-      rw[int_mul_one]
-      rw[int_mul_one]
-      have hx : (b + a > .zero) := gt_zero_plus_gte_zero b a hbz ha
-      rw[int_add_commutes] at hx
-      exact hx
-    have all_pos : (∀ (x : Int), x ∈ pos_com_set → x ≥ .zero) := by
-      intro x
-      simp only [(· ∈ · )]
-      unfold pos_com_set
-      unfold PosLinearCombinations
-      intro hh
-      have hh2 := hh.right
-      exact lt_means_lte Int.zero x hh2
-    have h_has_min : (has_min pos_com_set) :=
-      pos_nonempty_has_min pos_com_set h_has_element all_pos
+    have h_has_min : (has_min pos_com_set) := pos_lin_has_min_pos a b ha hbz
     unfold has_min at h_has_min
     obtain ⟨ d, hd ⟩ := h_has_min
     exists (d)
@@ -227,192 +357,12 @@ theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hbz : b > .zero) :
       unfold PosLinearCombinations at d_in_poscom
       exact d_in_poscom.right
 
-    have d_divides_a : (d.Divides a) := by
-      have hh := euclidean a d ha d_gt_zero
-      obtain ⟨ r, hr ⟩ := hh
-      obtain ⟨ q, hq ⟩ := hr
-      have hq1 := hq.left
-      have hq2 := hq.right.left
-      have hq3 := hq.right.right
-
-      have ham_d : (∃ (m n : Int ), d = a * m + b * n) := by
-        unfold pos_com_set at d_in_poscom
-        have hh := expand_poscom_set d a b
-        rw[hh] at d_in_poscom
-        exact d_in_poscom.left
-
-      obtain ⟨ m, hm ⟩ := ham_d
-      obtain ⟨ n, hn ⟩ := hm
-
-      have r_eq_zero : (r = .zero) :=
-        by
-          apply Classical.byContradiction
-          intro r_neq_zero
-          have h3 := expand_poscom_set r a b
-          symm at h3
-          have ham_r : (∃ (m n : Int ), r = a * m + b * n) :=
-            by
-              exists (Int.one.negate + q * m)
-              exists (q * n)
-              rw[mul_add_distributes]
-              apply add_right_cancel r (a * Int.one.negate + a * (q*m) + b * (q* n)) a
-              rw[hq1]
-              rw[sub_is_plus_neg]
-              rw[int_add_associates]
-              rw[inverse_nat2]
-              rw[int_add_zero]
-              rw[<-neg_expands_mul]
-              rw[int_mul_one]
-              rw[int_add_commutes]
-              rw[<-int_add_associates]
-              rw[<-int_add_associates]
-              rw[inverse_nat]
-              rw[int_zero_add]
-              rw (occs := .pos [2])[int_mul_commutes]
-              rw (occs := .pos [4])[int_mul_commutes]
-              rw[int_mul_associates]
-              rw[int_mul_associates]
-              rw[<-mul_add_distributes]
-              apply mul_left_congr
-              rw[int_mul_commutes]
-              rw (occs := .pos [2] )[int_mul_commutes]
-              exact hn
-          have r_gt_zero : .zero < r := by
-            have hh := And.intro hq2 r_neq_zero
-            simp only [(· < · )]
-            unfold Int.lt
-            constructor
-            exact hh.left
-            symm
-            exact hh.right
-          have r_in_a : (r ∈ pos_com_set) :=
-            by
-              unfold pos_com_set
-              have hand := And.intro ham_r r_gt_zero
-              rw[h3] at hand
-              exact hand
-          have d_leq_r : (d ≤ r) :=
-            by
-              unfold is_min at hd
-              exact hd.right r r_in_a
-          have d_eq_r : (d = r) :=
-            by
-              have hq4 := lt_means_lte r d hq3
-              exact (lte_antisym r d hq4 d_leq_r).symm
-          have d_neq_r : (d ≠ r) := (lt_means_neq r d hq3).symm
-          contradiction
-
-      unfold Int.Divides
-      exists q
-      rw[r_eq_zero] at hq1
-      have hh2 : (.zero + a) = (q * d - a) + a := add_right_congr Int.zero (q * d - a) a hq1
-      rw[int_zero_add] at hh2
-      rw[sub_is_plus_neg] at hh2
-      rw[int_add_associates] at hh2
-      rw (occs := .pos [2]) [int_add_commutes] at hh2
-      rw[inverse_nat] at hh2
-      rw[int_add_zero] at hh2
-      rw[int_mul_commutes] at hh2
-      exact hh2
-
-    have d_divides_b : (d.Divides b) := by
-      have hh := euclidean b d hb d_gt_zero
-      obtain ⟨ r, hr ⟩ := hh
-      obtain ⟨ q, hq ⟩ := hr
-      have hq1 := hq.left
-      have hq2 := hq.right.left
-      have hq3 := hq.right.right
-
-      have ham_d : (∃ (m n : Int ), d = a * m + b * n) := by
-        unfold pos_com_set at d_in_poscom
-        have hh := expand_poscom_set d a b
-        rw[hh] at d_in_poscom
-        exact d_in_poscom.left
-
-      obtain ⟨ m, hm ⟩ := ham_d
-      obtain ⟨ n, hn ⟩ := hm
-
-      have r_eq_zero : (r = .zero) :=
-        by
-          apply Classical.byContradiction
-          intro r_neq_zero
-          have h3 := expand_poscom_set r a b
-          symm at h3
-          have ham_r : (∃ (m n : Int ), r = a * m + b * n) :=
-            by
-              exists (q * m)
-              exists (Int.one.negate + q * n)
-              rw[mul_add_distributes]
-              apply add_right_cancel r (a * (q*m) + (b * Int.one.negate + b * (q* n))) b
-              rw[hq1]
-              rw[sub_is_plus_neg]
-              rw[int_add_associates]
-              rw[inverse_nat2]
-              rw[int_add_zero]
-              rw[<-neg_expands_mul]
-              rw[int_mul_one]
-              rw[int_add_commutes]
-              rw[<-int_add_associates]
-              rw[<-int_add_associates]
-              rw[int_add_commutes]
-              rw[<-int_add_associates]
-              rw(occs := .pos [3]) [int_add_commutes]
-              rw[int_add_associates]
-              rw[int_add_associates]
-              rw[inverse_nat]
-              rw[int_add_zero]
-              rw (occs := .pos [2])[int_mul_commutes]
-              rw (occs := .pos [4])[int_mul_commutes]
-              rw[int_mul_associates]
-              rw[int_mul_associates]
-              rw[<-mul_add_distributes]
-              apply mul_left_congr
-              rw[int_mul_commutes]
-              rw (occs := .pos [2] )[int_mul_commutes]
-              rw[int_add_commutes]
-              exact hn
-          have r_gt_zero : .zero < r := by
-            have hh := And.intro hq2 r_neq_zero
-            simp only [(· < · )]
-            unfold Int.lt
-            constructor
-            exact hh.left
-            symm
-            exact hh.right
-          have r_in_a : (r ∈ pos_com_set) :=
-            by
-              unfold pos_com_set
-              have hand := And.intro ham_r r_gt_zero
-              rw[h3] at hand
-              exact hand
-          have d_leq_r : (d ≤ r) :=
-            by
-              unfold is_min at hd
-              exact hd.right r r_in_a
-          have d_eq_r : (d = r) :=
-            by
-              have hq4 := lt_means_lte r d hq3
-              exact (lte_antisym r d hq4 d_leq_r).symm
-          have d_neq_r : (d ≠ r) := (lt_means_neq r d hq3).symm
-          contradiction
-      unfold Int.Divides
-      exists q
-      rw[r_eq_zero] at hq1
-      have hh2 : (.zero + b) = (q * d - b) + b := add_right_congr Int.zero (q * d - b) b hq1
-      rw[int_zero_add] at hh2
-      rw[sub_is_plus_neg] at hh2
-      rw[int_add_associates] at hh2
-      rw (occs := .pos [2]) [int_add_commutes] at hh2
-      rw[inverse_nat] at hh2
-      rw[int_add_zero] at hh2
-      rw[int_mul_commutes] at hh2
-      exact hh2
+    constructor
+    exact exists_gcd_pos_lemma a b d ha hd
 
     constructor
-    exact d_divides_a
-
-    constructor
-    exact d_divides_b
+    have hd2 := min_d_symm_poslin a b d hd
+    exact exists_gcd_pos_lemma b a d hb hd2
 
     constructor
     intro c

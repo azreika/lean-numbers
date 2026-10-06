@@ -94,4 +94,15 @@ theorem negate_twice (a : Int) : (a.negate.negate = a) :=
   by
     rfl
 
+  @[simp] theorem mul_neg_one1 (a : Int) : a * Int.one.negate = a.negate :=
+  by
+    rw[<-neg_expands_mul]
+    simp
+
+  @[simp] theorem mul_neg_one2 (a : Int) : Int.one.negate * a = a.negate :=
+  by
+    rw[int_mul_commutes]
+    rw[<-neg_expands_mul]
+    simp
+
 end MyInt
