@@ -440,10 +440,61 @@ theorem lt_both_impossible (a b : Int) (h1: a < b) (h2 : b < a) : False :=
     have h6 := lte_antisym a b h4 h5
     contradiction
 
+theorem divides_means_in_lincom (a b d : Int) (h1: d.Divides a) :
+  d ∈ LinearCombinations a b :=
+  by
+    sorry
 
-theorem gcd_is_min_poslin ( a b d : Int) (h1 : d = Int.gcd a b) :
+theorem pos_lincom_means_in_poslin (a b d : Int) (h1: d ∈ LinearCombinations a b) (h2 : d > .zero) :
+  d ∈ PosLinearCombinations a b := by sorry
+
+theorem pos_divides_means_pos_lincom (a b d : Int) (h1 : d.Divides a ) (h2: d > .zero) :
+  d ∈ PosLinearCombinations a b := by
+    have h3 := divides_means_in_lincom a b d h1
+    exact pos_lincom_means_in_poslin a b d h3 h2
+
+theorem gcd_means_pos ( a b d : Int ) (h1: d = a.gcd b) :
+  d ≥ .zero := by sorry
+
+theorem pos_lin_means_divides_left ( a b x : Int ) (h1 : x ∈ PosLinearCombinations a b) :
+  x.Divides a := by
+  sorry
+
+theorem pos_lin_means_flip ( a b x : Int) (h1 : x ∈ PosLinearCombinations a b) :
+  x ∈ PosLinearCombinations b a  := by
+  have h2 := expand_poscom_set x a b
+  have h3 := h2.mp h1
+  sorry
+
+theorem pos_lin_means_divides_right (a b x : Int) (h1 : x ∈ PosLinearCombinations a b) :
+  x.Divides b := by
+  exact pos_lin_means_divides_left b a x (pos_lin_means_flip a b x h1)
+
+theorem gcd_is_min_poslin ( a b d : Int) (h1 : d = Int.gcd a b) (dsign : d ≠ .zero):
   is_min d (PosLinearCombinations a b) :=
     by
+      unfold is_min
+      constructor
+
+      have d_divides_a := gcd_means_divides a b d h1.symm
+      have d_geq_zero := gcd_means_pos a b d h1
+      have d_gt_zero := lte_and_nonequal_means_lt Int.zero d d_geq_zero dsign.symm
+
+      exact pos_divides_means_pos_lincom a b d d_divides_a.left d_gt_zero
+      intro y
+
+      intro hy
+      have hy2 := expand_poscom_set y a b
+      have hy3 := hy2.mp hy
+      have hy4 := hy3.left
+      obtain ⟨ m, hm ⟩ := hy4
+      obtain ⟨ n, hn ⟩ := hm
+      rw[hn]
+
+      have d_gcd := gcd_means_isgcd a b d h1
+      dsimp [IsGcd] at d_gcd
+      have hdc := d_gcd.right.right.left
+      have hdcy := hdc y
       sorry
 
 theorem in_poslin_means_poslin ( a b x : Int) (h1: x ∈ PosLinearCombinations a b) :
@@ -464,7 +515,7 @@ theorem coprime_means_poslin_one (a b : Int) (h1: Int.Coprime a b) :
     dsimp [Int.Coprime] at h1
     have h2 := gcd_is_min_poslin a b Int.one h1.symm
     dsimp [is_min] at h2
-    have h3 := h2.left
+    have h3 := (h2 one_neq_zero).left
     exact in_poslin_means_poslin a b Int.one h3
 
 theorem prod_of_coprime (d a b : Int) (h1 : d.Divides (a * b)) (h2 : (Int.Coprime d b)) :
@@ -513,8 +564,10 @@ theorem chap1_q10 (u v : Int) (h1 : Int.gcd u v = .one) :
 
     have h2 := gcd_is_min_poslin (u + v) (u - v) d hd
     dsimp [is_min] at h2
-    have h3 := h2.left
-    have h4 := h2.right
+
+    have dneqzero : ¬ d = .zero := sorry
+    have h3 := (h2 dneqzero).left
+    have h4 := (h2 dneqzero).right
 
     have h5 : (.two * u) ∈ PosLinearCombinations (u + v) (u - v) := sorry
     have h6 : (.two * v) ∈ PosLinearCombinations (u + v) (u - v) := sorry

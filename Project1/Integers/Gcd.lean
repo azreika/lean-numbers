@@ -351,11 +351,6 @@ theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hbz : b > .zero) :
     have d_in_poscom : (d ∈ pos_com_set) := by
       unfold is_min at hd
       exact hd.left
-    have d_gt_zero : (.zero < d) := by
-      simp only [(· ∈ · )] at d_in_poscom
-      unfold pos_com_set at d_in_poscom
-      unfold PosLinearCombinations at d_in_poscom
-      exact d_in_poscom.right
 
     constructor
     exact exists_gcd_pos_lemma a b d ha hd
@@ -400,6 +395,11 @@ theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hbz : b > .zero) :
     rw[<-hn] at hcab
     exact hcab
 
+    have d_gt_zero : (.zero < d) := by
+      simp only [(· ∈ · )] at d_in_poscom
+      unfold pos_com_set at d_in_poscom
+      unfold PosLinearCombinations at d_in_poscom
+      exact d_in_poscom.right
     exact lt_means_lte Int.zero d d_gt_zero
 
 
