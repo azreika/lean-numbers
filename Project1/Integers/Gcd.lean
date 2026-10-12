@@ -186,6 +186,16 @@ theorem gt_zero_plus_gte_zero (a b : Int) (h1: a > .zero) (h2 : b ≥ .zero) :
 theorem neq_sym (a b :Int) (h1 : ¬ (a = b)) : a ≠ b := by
   simp
   exact h1
+
+theorem pos_lin_gt_zero (a b : Int) :
+  ∀ (x : Int), x ∈ (PosLinearCombinations a b) → x > .zero := by
+    intro x
+    simp only [(· ∈ · )]
+    unfold PosLinearCombinations
+    intro hh
+    have hh2 := hh.right
+    exact hh2
+
 theorem pos_lin_positive (a b : Int) :
   ∀ (x : Int), x ∈ (PosLinearCombinations a b) → x ≥ .zero := by
     intro x

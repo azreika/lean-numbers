@@ -39,6 +39,11 @@ theorem negate_twice (a : Int) : (a.negate.negate = a) :=
   rw[int_add_associates]
   simp
 
+@[simp] theorem inverse_nat_simp5 (a b : Int) : (b - a) + a = b := by
+  rw[sub_is_plus_neg]
+  rw[int_add_associates]
+  simp
+
 @[simp] theorem int_mul_one_simp (a : Int) : (a * .one = a) := by
   rw[int_mul_one]
 
@@ -52,6 +57,13 @@ theorem negate_twice (a : Int) : (a.negate.negate = a) :=
 
 @[simp] theorem int_mul_zero_simp (a : Int) : (a * .zero = .zero) := by
   rw[int_mul_zero]
+
+@[simp] theorem neg_mul_expands_simp (a b : Int) : (a.negate * b.negate = a * b) := by
+  rw[<-neg_expands_mul]
+  rw[int_mul_commutes]
+  rw[<-neg_expands_mul]
+  rw[double_negate]
+  rw[int_mul_commutes]
 
 @[simp] theorem intrep_add_together (a b : IntRep) :
   (a + b) = IntRep.mk (a.pos + b.pos) (a.neg + b.neg) :=

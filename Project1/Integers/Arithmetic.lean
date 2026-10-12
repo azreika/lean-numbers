@@ -688,6 +688,18 @@ theorem mul_left_divides( a b c : Int ) ( h1 : c * a = c * b ) (hc : c ≠ .zero
     have h5 : (a = b) := unique_inverse a b h4
     exact h5
 
+theorem divides_prod ( p a b : Int ) (h1: p.Divides a) :
+  (p.Divides (a * b)) :=
+  by
+    dsimp [Int.Divides] at h1
+    obtain ⟨ k, hk ⟩ := h1
+    dsimp [Int.Divides]
+    exists(b * k)
+    rw[hk]
+    rw[int_mul_associates]
+    apply mul_left_congr
+    rw[int_mul_commutes]
+
 theorem intofnat_mul (a b : Nat) :
   (intOfNat a) * (intOfNat b) = intOfNat (a * b) :=
   by

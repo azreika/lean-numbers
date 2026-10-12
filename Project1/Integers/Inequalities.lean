@@ -931,6 +931,22 @@ theorem lte_cancel_right ( a b c : Int ) ( h1 : a + c ≤ b + c ) :
     rw (occs := .pos [2]) [add_commutes] at h4
     exact h4
 
+theorem lt_cancel_right (a b c: Int) (h1 : a + c < b + c) : (a < b ) :=
+  by
+    simp only [(· < · )]
+    dsimp [Int.lt]
+    constructor
+    have h2 := lt_means_lte (a + c) (b+c) h1
+    have h3 := lte_cancel_right a b c h2
+    exact h3
+
+    intro h2
+    rw[h2] at h1
+    have h2 := lt_add_right (b+c) (b+c) c.negate h1
+    simp at h2
+    have h3 := lt_means_neq b b h2
+    contradiction
+
 theorem int_lte_mul_left (a b c : Int) (h1 : a ≤ b) (h2: c ≥ .zero) :
   (a * c ≤ b * c) :=
   by
