@@ -117,4 +117,16 @@ theorem negate_twice (a : Int) : (a.negate.negate = a) :=
     rw[<-neg_expands_mul]
     simp
 
+  @[simp] theorem neg_sum1 (a b : Int) : (a + b).negate = a.negate + b.negate  :=
+  by
+    rw[negate_to_mul_neg_one]
+    rw[int_mul_commutes]
+    rw[mul_add_distributes]
+    simp
+
+  @[simp] theorem neg_mul1 (a b : Int) : (a * b.negate).negate = a * b  :=
+  by
+    rw[neg_expands_mul]
+    simp
+
 end MyInt

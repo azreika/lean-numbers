@@ -390,8 +390,6 @@ theorem int_neg_expands (a b : Int) : a.negate + b.negate = (a+b).negate :=
     | mk akpos akneg =>
     cases bk with
     | mk bkpos bkneg =>
-    rw[<-add_mk]
-    simp
     dsimp [IntRep.negate]
     rfl
 

@@ -446,7 +446,7 @@ theorem gcd_means_pos ( a b d : Int ) (h1: d = a.gcd b) :
     dsimp [IsGcd] at d_gcd
     exact d_gcd.right.right.right
 
-theorem pos_lin_means_flip ( a b x : Int) (h1 : x ∈ PosLinearCombinations a b) :
+theorem poslin_means_flip ( a b x : Int) (h1 : x ∈ PosLinearCombinations a b) :
   x ∈ PosLinearCombinations b a  := by
   have h2 := expand_poscom_set x a b
   have h3 := h2.mp h1
@@ -521,7 +521,7 @@ theorem min_poslin_divides_left_positive (a b d : Int) (h1: is_min d (PosLinearC
       obtain ⟨ m, hm ⟩ := h3
       obtain ⟨ n, hm ⟩ := hm
 
-      have d_gt_zero := pos_lin_gt_zero a b d h2
+      have d_gt_zero := poslin_gt_zero a b d h2
       have euc := euclidean a d apos d_gt_zero
       obtain ⟨ r, hh ⟩ := euc
       obtain ⟨ q, hh ⟩ := hh
@@ -585,7 +585,7 @@ theorem in_poslin_means_in_neg (d a b : Int) (h1 : d ∈ PosLinearCombinations a
     simp
     exact hh
 
-    exact pos_lin_gt_zero a b d h1
+    exact poslin_gt_zero a b d h1
 
 theorem min_poslin_means_min_neg (d a b : Int) (h1: is_min d (PosLinearCombinations a b)) :
   is_min d (PosLinearCombinations a.negate b) := by
@@ -605,7 +605,7 @@ theorem min_poslin_means_min_neg (d a b : Int) (h1: is_min d (PosLinearCombinati
     simp
     exact hh
 
-    exact pos_lin_gt_zero a b d h1.left
+    exact poslin_gt_zero a b d h1.left
 
     intro y
     intro hy
@@ -635,14 +635,14 @@ theorem min_poslin_divides_right (a b d : Int) (h1: is_min d (PosLinearCombinati
     by
       dsimp [is_min] at h1
       have h2 := h1.left
-      have h3 := pos_lin_means_flip a b d h2
+      have h3 := poslin_means_flip a b d h2
       have h4 : is_min d (PosLinearCombinations b a) := by
         dsimp [is_min]
         constructor
         exact h3
         intro y
         intro hy
-        have hz := pos_lin_means_flip b a y hy
+        have hz := poslin_means_flip b a y hy
         exact h1.right y hz
       exact min_poslin_divides_left b a d h4
 
@@ -677,7 +677,7 @@ theorem min_poslin_is_gcd(a b d : Int) (h1: is_min d (PosLinearCombinations a b)
     rw[<-hh] at c_div_d
     exact c_div_d
 
-    exact pos_lin_positive a b d h2
+    exact poslin_positive a b d h2
 
 theorem poslin_nonempty (a b : Int) (bn : b ≠ .zero) : is_nonempty (PosLinearCombinations a b) := by
   unfold is_nonempty
@@ -715,14 +715,14 @@ theorem poslin_has_min (a b : Int) (bn : b ≠ .zero ): has_min (PosLinearCombin
     exact poslin_nonempty a b bn
     intro x
     intro hx
-    exact pos_lin_positive a b x hx
+    exact poslin_positive a b x hx
 
 theorem gcd_pos_means_in_poslin_nonzero (a b d : Int) (h1 : d = Int.gcd a b) (dsign : d ≠ .zero)
   (apos : a ≥ .zero ) (bpos : b > .zero) :
   d ∈ PosLinearCombinations a b :=
   by
     have d_gt_zero := lte_and_nonequal_means_lt Int.zero d (gcd_means_pos a b d h1) dsign.symm
-    have h_min := pos_lin_has_min_pos a b apos bpos
+    have h_min := poslin_has_min_pos a b apos bpos
     unfold has_min at h_min
     obtain ⟨ mm , hh ⟩ := h_min
     have h2 := min_poslin_is_gcd a b mm hh
@@ -914,6 +914,12 @@ theorem prod_of_coprime (d a b : Int) (h1 : d.Divides (a * b)) (h2 : (Int.Coprim
     rw[hn2] at d_sum
     exact d_sum
 
+
+theorem prod_of_coprime_right (d a b : Int) (h1 : d.Divides (a * b)) (h2 : (Int.Coprime d a)) :
+  d.Divides b := by
+    rw[int_mul_commutes] at h1
+    exact prod_of_coprime d b a h1 h2
+
 theorem pos_divisors_of_two ( d : Int ) (h1 : d > .zero) (h2 : d.Divides .two) :
   d = .one ∨ d = .two :=
   by
@@ -930,6 +936,244 @@ theorem pos_divisors_of_two ( d : Int ) (h1 : d > .zero) (h2 : d.Divides .two) :
     right
     exact h6
 
+theorem gteneq_gt_zero (a : Int) (h1: Int.zero ≤ a) (h2: ¬ a = .zero) : (Int.zero < a) :=
+  by
+    exact lte_and_nonequal_means_lt Int.zero a h1 (neq_sym a Int.zero h2).symm
+
+theorem poslin_means_lin (a b c : Int) (h1 : c ∈ PosLinearCombinations a b) : c ∈ LinearCombinations a b :=
+  by
+    unfold PosLinearCombinations at h1
+    simp only [(· ∈ ·)] at h1
+    exact h1.left
+
+theorem mul_in_lin (a b c x : Int) (h1 : c ∈ LinearCombinations a b) :
+  c * x ∈ LinearCombinations a b :=
+    by
+      unfold LinearCombinations
+      unfold LinearCombinations at h1
+      simp only [(· ∈ ·)] at h1
+      simp only [(· ∈ ·)]
+      obtain ⟨ m, hm ⟩ := h1
+      obtain ⟨ n, hm ⟩ := hm
+      exists (m * x)
+      exists (n * x)
+      rw[<-int_mul_associates]
+      rw[<-int_mul_associates]
+
+      have hm2 := mul_left_congr c (a * m + b * n) x hm
+      rw[int_mul_commutes] at hm2
+      rw[mul_add_distributes] at hm2
+      rw (occs := .pos [2] ) [int_mul_commutes] at hm2
+      rw (occs := .pos [4] ) [int_mul_commutes] at hm2
+      exact hm2
+
+theorem sum_in_lin (a b c d : Int) (h1 : c ∈ LinearCombinations a b) (h2 : d ∈ LinearCombinations a b) :
+  c + d ∈ LinearCombinations a b :=
+  by
+    unfold LinearCombinations
+    unfold LinearCombinations at h1
+    simp only [(· ∈ ·)] at h1
+    simp only [(· ∈ ·)]
+    obtain ⟨ m, hm ⟩ := h1
+    obtain ⟨ n, hm ⟩ := hm
+    unfold LinearCombinations at h2
+    simp only [(· ∈ ·)] at h2
+    obtain ⟨ m2, hm2 ⟩ := h2
+    obtain ⟨ n2, hm2 ⟩ := hm2
+
+    exists(m + m2)
+    exists(n+n2)
+
+    rw[mul_add_distributes]
+    rw[mul_add_distributes]
+    rw[int_add_associates]
+    rw (occs := .pos [2] )[int_add_commutes]
+    rw (occs := .pos [3] )[int_add_commutes]
+    rw[int_add_associates]
+    rw[int_add_associates]
+    rw (occs := .pos [2] )[int_add_commutes]
+    rw[int_add_associates]
+    rw[int_add_associates]
+    rw[<-hm]
+    rw[<-int_add_associates]
+    rw (occs := .pos [2]) [int_add_commutes]
+    rw (occs := .pos [3]) [int_add_commutes]
+    rw[<-hm2]
+
+theorem neg_in_lin (a b d : Int) (h1: d ∈ LinearCombinations a b) : d.negate ∈ LinearCombinations a b :=
+  by
+    unfold LinearCombinations
+    unfold LinearCombinations at h1
+    simp only [(· ∈ ·)] at h1
+    simp only [(· ∈ ·)]
+    obtain ⟨ m, hm ⟩ := h1
+    obtain ⟨ n, hm ⟩ := hm
+    exists m.negate
+    exists n.negate
+    apply unnegate_both
+    simp
+    exact hm
+
+theorem sub_in_lin (a b c d : Int) (h1 : c ∈ LinearCombinations a b) (h2 : d ∈ LinearCombinations a b) :
+  c - d ∈ LinearCombinations a b :=
+  by
+    rw[sub_is_plus_neg]
+    have h3 := neg_in_lin a b d h2
+    exact sum_in_lin a b c d.negate h1 h3
+
+theorem lin_pos_means_poslin ( a b c : Int) (h1 : c ∈ LinearCombinations a b) (h2 : c > .zero) :
+  c ∈ PosLinearCombinations a b := by
+    unfold PosLinearCombinations
+    simp only [(· ∈ · )]
+    constructor
+    exact h1
+    exact h2
+
+theorem neg_eq_zero (a b : Int) (h1 : a - b = .zero) : a = b :=
+  by
+    have h2 := add_right_congr (a - b) Int.zero b  h1
+    simp at h2
+    exact h2
+
+theorem poslin_zero_empty (c : Int) (h1 : c ∈ PosLinearCombinations .zero .zero) : False := by
+  unfold PosLinearCombinations at h1
+  simp only [(· ∈ · )] at h1
+  unfold LinearCombinations at h1
+  have hh := h1.left
+  obtain ⟨ m, hm ⟩ := hh
+  obtain ⟨ n, hm ⟩ := hm
+  simp at hm
+  have h3 := lt_means_neq Int.zero c h1.right
+  symm at hm
+  contradiction
+
+theorem in_poslin_means_divs (a b c d : Int) (h1 : d = a.gcd b) (h2 : c ∈ PosLinearCombinations a b) :
+  d.Divides c := by
+    by_cases dsign : d = .zero
+    rw[dsign] at h1
+    have h3 := gcd_zero_means_both_zero a b h1.symm
+    rw[h3.left] at h2
+    rw[h3.right] at h2
+    have contr := poslin_zero_empty c h2
+    contradiction
+
+    have d_gte_zero := gcd_means_pos a b d h1
+    have d_gt_zero := gteneq_gt_zero d d_gte_zero dsign
+    have c_gte_zero := poslin_positive a b c h2
+    have euc := euclidean c d c_gte_zero d_gt_zero
+    obtain ⟨ r, hr ⟩ := euc
+    obtain ⟨ q, hq ⟩ := hr
+
+    have h3 := expand_poslin a b c h2
+    obtain ⟨ m, hm ⟩ := h3
+    obtain ⟨ n, hm ⟩ := hm
+    have hq1 := hq.left
+
+    have d_in_poslin := gcd_means_in_poslin a b d h1 dsign
+    have d_in_lin := poslin_means_lin a b d d_in_poslin
+    have qd_in_lin := mul_in_lin a b d q d_in_lin
+    rw[int_mul_commutes] at qd_in_lin
+
+    have c_in_lin := poslin_means_lin a b c h2
+    have r_in_lin := sub_in_lin a b (q * d) c qd_in_lin c_in_lin
+    rw[<-hq1] at r_in_lin
+
+    by_cases rsign : r = .zero
+    rw[rsign] at hq1
+    unfold Int.Divides
+    exists q
+
+    have hq2 := neg_eq_zero (q*d) c hq1.symm
+    rw[int_mul_commutes]
+    exact hq2.symm
+
+    have r_gt_zero := gteneq_gt_zero r hq.right.left rsign
+    have r_in_poslin := lin_pos_means_poslin a b r r_in_lin r_gt_zero
+    have d_is_min := gcd_is_min_poslin a b d h1 dsign
+    unfold is_min at d_is_min
+    have d_lte_r := d_is_min.right r r_in_poslin
+    have contr := lt_and_lte_means_false r d d_lte_r hq.right.right
+    contradiction
+
+theorem in_lin_means_divs (a b c d : Int) (h1 : d = a.gcd b) (h2 : c ∈ LinearCombinations a b) :
+  d.Divides c := by
+    by_cases csign : c > .zero
+    have c_in_poslin := lin_pos_means_poslin a b c h2 csign
+    exact in_poslin_means_divs a b c d h1 c_in_poslin
+    by_cases csign2 : c = .zero
+    rw[csign2]
+    exact all_divide_zero d
+    have csign := not_lt_means_flip_lte Int.zero c csign
+    have csign := negate_lte c Int.zero csign
+    simp at csign
+    have h3 := neg_in_lin a b c h2
+    have cneg_not_zero : ¬ (c.negate = .zero) := by
+      intro h4
+      have h5 := negate_both_sides c.negate Int.zero h4
+      simp at h5
+      contradiction
+    have cneg_in_poslin := lin_pos_means_poslin a b c.negate h3 (gteneq_gt_zero c.negate csign cneg_not_zero)
+    have h5 := in_poslin_means_divs a b c.negate d h1 cneg_in_poslin
+    have h6 := divides_neg d c.negate h5
+    simp at h6
+    exact h6
+
+theorem left_in_lin (a b : Int) : a ∈ LinearCombinations a b :=
+  by
+    unfold LinearCombinations
+    simp only [(· ∈ · )]
+    exists .one
+    exists .zero
+    simp
+
+theorem right_in_lin (a b : Int) : b ∈ LinearCombinations a b :=
+  by
+    unfold LinearCombinations
+    simp only [(· ∈ · )]
+    exists .zero
+    exists .one
+    simp
+
+theorem gcd_lte_right (a b d : Int) (h1: d = a.gcd b) (hb : b > .zero) : d ≤ b := by
+  have h2 := gcd_means_divides a b d h1.symm
+  have h3 := h2.right
+  have h4 := div_means_lte d b hb h3
+  exact h4
+
+theorem non_coprime_two (a : Int) (h1 : ¬ a.Coprime Int.two) : Int.two.Divides a := by
+  dsimp [Int.Coprime] at h1
+  have h2 := exists_gcd a Int.two
+  obtain ⟨ d, hd ⟩ := h2
+  have hd := isgcd_means_gcd a Int.two d hd
+  rw[hd] at h1
+  have h3 := gcd_lte_right a Int.two d hd.symm zero_lt_two
+  have h4 := gcd_means_pos a Int.two d hd.symm
+  by_cases d_zero : d = .zero
+  rw[d_zero] at hd
+  have hd2 := gcd_zero_means_both_zero a Int.two hd
+  have hd3 := hd2.right
+  have hd4 := two_neq_zero
+  contradiction
+  have h5 := gteneq_gt_zero d h4 d_zero
+  have h6 := lt_means_lte_plus_one Int.zero d h5
+  simp at h6
+  by_cases d_one : d = .one
+  contradiction
+  have d_one := neq_sym d Int.one d_one
+  have h7 := lte_and_nonequal_means_lt Int.one d h6 d_one.symm
+  have h8 := lt_means_lte_plus_one Int.one d h7
+  simp at h8
+  have h9 := lte_antisym Int.two d h8 h3
+  rw[<-h9] at hd
+  have h10 := (gcd_means_divides a Int.two Int.two) hd
+  exact h10.left
+
+theorem plus_plus_means_twomul (a : Int) : a + a = .two * a := by
+  rw[<-one_plus_one]
+  rw[int_mul_commutes]
+  rw[mul_add_distributes]
+  simp
+
 theorem chap1_q10 (u v : Int) (h1 : Int.gcd u v = .one) :
   (Int.gcd (u + v) (u -v)) = .one ∨
   (Int.gcd (u + v) (u-v)) = .two :=
@@ -937,49 +1181,80 @@ theorem chap1_q10 (u v : Int) (h1 : Int.gcd u v = .one) :
     let d := Int.gcd (u + v) (u -v )
     have hd : d = Int.gcd (u + v) (u -v ) := rfl
     rw[<-hd]
+    have gcd_prop := gcd_means_divprop u v Int.one h1.symm
 
+    have hx1 : (u + v) + (u-v) = .two * u := by
+      rw[int_add_associates]
+      rw[sub_is_plus_neg]
+      rw (occs := .pos [2] ) [int_add_commutes]
+      rw[int_add_associates]
+      simp
+      exact plus_plus_means_twomul u
+    have hx2 : (u + v) - (u-v) = .two * v := by
+      rw[sub_is_plus_neg]
+      rw[sub_is_plus_neg]
+      simp
+      rw[int_add_associates]
+      rw[int_add_commutes]
+      rw(occs := .pos [2] )[int_add_commutes]
+      rw[int_add_commutes]
+      rw[<-int_add_associates]
+      rw[<-int_add_associates]
+      simp
+      exact plus_plus_means_twomul v
 
-    have d_neq_zero : d ≠ .zero := by
-      intro hx
-      rw[hx] at hd
-      have hd' := gcd_zero_means_both_zero (u+v) (u-v ) hd.symm
-      sorry
-    have mm := gcd_is_min_poslin (u + v) (u - v) d hd d_neq_zero
-    have h5 : (.two * u) ∈ PosLinearCombinations (u + v) (u - v) := sorry
-    have h6 : (.two * v) ∈ PosLinearCombinations (u + v) (u - v) := sorry
+    have two_u_in_lin : .two * u ∈ LinearCombinations (u+v) (u-v) :=
+      by
+        have h2 := left_in_lin (u+v) (u-v)
+        have h3 := right_in_lin (u+v) (u-v)
+        have h4 := sum_in_lin (u + v) (u-v) (u+v) (u-v) h2 h3
+        rw[hx1] at h4
+        exact h4
 
-    sorry
-    -- have h2 := gcd_is_min_poslin (u + v) (u - v) d hd
-    -- dsimp [is_min] at h2
+    have two_v_in_lin : .two * v ∈ LinearCombinations (u+v) (u-v) :=
+    by
+      have h2 := left_in_lin (u+v) (u-v)
+      have h3 := right_in_lin (u+v) (u-v)
+      have h4 := sub_in_lin (u + v) (u-v) (u+v) (u-v) h2 h3
+      rw[hx2] at h4
+      exact h4
 
-    -- have dneqzero : ¬ d = .zero := sorry
-    -- have h3 := (h2 dneqzero).left
-    -- have h4 := (h2 dneqzero).right
+    have two_u_div_d := in_lin_means_divs (u+v) (u-v) (Int.two*u) d hd two_u_in_lin
+    have two_v_div_d := in_lin_means_divs (u+v) (u-v) (Int.two*v) d hd two_v_in_lin
 
-    -- have h7 : (d.Divides (.two * u)) := sorry
-    -- have h8 : (d.Divides (.two * v)) := sorry
+    by_cases d2_coprime : Int.Coprime d Int.two
+    have d_div_u := prod_of_coprime_right d Int.two u two_u_div_d d2_coprime
+    have d_div_v := prod_of_coprime_right d Int.two v two_v_div_d d2_coprime
+    have h2 := gcd_prop d d_div_u d_div_v
+    have h3 := pos_divs_of_one d (gcd_means_pos (u+v) (u-v) d hd) h2
+    left
+    exact h3
 
-    -- by_cases div_u : d.Divides u
-    -- by_cases div_v : d.Divides v
+    right
+    have two_div_d := non_coprime_two d d2_coprime
 
-    -- have h9 : d.Divides (Int.gcd u v) := sorry
-    -- have h10: d.Divides .one := sorry
-    -- have h11 : d ≥ .zero := sorry
-    -- have h12 : d = Int.one := sorry
-    -- left
-    -- exact h12
-
-    -- have h10 : d.Divides Int.two := sorry
-    -- have h11 : d ≥ .zero := sorry
-
-    -- have h12 : d = .one ∨ d = .two := sorry
-    -- exact h12
-
-    -- have coprime_u : d.Coprime u := sorry
-    -- have h9 : d.Divides Int.two := prod_of_coprime d Int.two u h7 coprime_u
-    -- have h11 : d > .zero := sorry
-
-    -- have h12 : d = .one ∨ d = .two := pos_divisors_of_two d h11 h9
-    -- exact h12
+    unfold Int.Divides at two_div_d
+    obtain ⟨ k, hk ⟩ := two_div_d
+    unfold Int.Divides at two_u_div_d
+    unfold Int.Divides at two_v_div_d
+    obtain ⟨ m, hm ⟩ := two_u_div_d
+    rw[hk] at hm
+    rw[int_mul_associates] at hm
+    have hm2 := mul_left_divides u (k*m) Int.two hm two_neq_zero
+    have hku := left_divides k m
+    rw[<-hm2] at hku
+    obtain ⟨ m, hm ⟩ := two_v_div_d
+    rw[hk] at hm
+    rw[int_mul_associates] at hm
+    have hm2 := mul_left_divides v (k*m) Int.two hm two_neq_zero
+    have hkv := left_divides k m
+    rw[<-hm2] at hkv
+    have hh := gcd_prop k hku hkv
+    have dpos := gcd_means_pos (u+v) (u-v) d hd
+    rw[hk] at dpos
+    have h3 := pos_divs_of_one k (prod_geq_means_op_geq Int.two k dpos rfl two_neq_zero) hh
+    rw[h3] at hk
+    simp at hk
+    exact hk
 
 end MyInt

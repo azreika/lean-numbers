@@ -187,7 +187,7 @@ theorem neq_sym (a b :Int) (h1 : ¬ (a = b)) : a ≠ b := by
   simp
   exact h1
 
-theorem pos_lin_gt_zero (a b : Int) :
+theorem poslin_gt_zero (a b : Int) :
   ∀ (x : Int), x ∈ (PosLinearCombinations a b) → x > .zero := by
     intro x
     simp only [(· ∈ · )]
@@ -196,7 +196,7 @@ theorem pos_lin_gt_zero (a b : Int) :
     have hh2 := hh.right
     exact hh2
 
-theorem pos_lin_positive (a b : Int) :
+theorem poslin_positive (a b : Int) :
   ∀ (x : Int), x ∈ (PosLinearCombinations a b) → x ≥ .zero := by
     intro x
     simp only [(· ∈ · )]
@@ -205,7 +205,7 @@ theorem pos_lin_positive (a b : Int) :
     have hh2 := hh.right
     exact lt_means_lte Int.zero x hh2
 
-theorem pos_lin_nonempty_pos ( a b : Int) (ha : a ≥ .zero) (hbz : b > .zero) :
+theorem poslin_nonempty_pos ( a b : Int) (ha : a ≥ .zero) (hbz : b > .zero) :
   is_nonempty (PosLinearCombinations a b) := by
     unfold is_nonempty
     exists (a + b)
@@ -221,10 +221,10 @@ theorem pos_lin_nonempty_pos ( a b : Int) (ha : a ≥ .zero) (hbz : b > .zero) :
     rw[int_add_commutes] at hx
     exact hx
 
-theorem pos_lin_has_min_pos (a b : Int) (ha : a ≥ .zero) (hbz : b > .zero) :
+theorem poslin_has_min_pos (a b : Int) (ha : a ≥ .zero) (hbz : b > .zero) :
   has_min (PosLinearCombinations a b) := by
-    have nonempty := pos_lin_nonempty_pos a b ha hbz
-    have all_pos := pos_lin_positive a b
+    have nonempty := poslin_nonempty_pos a b ha hbz
+    have all_pos := poslin_positive a b
     exact pos_nonempty_has_min (PosLinearCombinations a b) nonempty all_pos
 
 theorem min_d_symm_poslin ( a b d : Int )  (hd : is_min d (PosLinearCombinations a b)) : is_min d (PosLinearCombinations b a) :=
@@ -353,7 +353,7 @@ theorem exists_gcd_pos ( a b : Int) (ha: a ≥ .zero) (hbz : b > .zero) :
   by
     have hb : (b ≥ .zero) := lt_means_lte .zero b hbz
     let pos_com_set : Set Int := PosLinearCombinations a b
-    have h_has_min : (has_min pos_com_set) := pos_lin_has_min_pos a b ha hbz
+    have h_has_min : (has_min pos_com_set) := poslin_has_min_pos a b ha hbz
     unfold has_min at h_has_min
     obtain ⟨ d, hd ⟩ := h_has_min
     exists (d)
